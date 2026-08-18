@@ -134,7 +134,21 @@ export function maskPII(value: string, visibleStart = 4, visibleEnd = 4): string
 }
 
 /**
- * PII fields that should be encrypted in each model
+ * PII fields the Prisma extension encrypts on write and decrypts on read.
+ *
+ * **This is not the complete list of encrypted PII in the schema, and must not be read as one.**
+ * `BankAccount.iban` is encrypted too, but at the call site in
+ * `lib/services/bank/consent.ts` rather than through this extension — deliberately, and it should
+ * stay that way:
+ *
+ *   - nothing needs the plaintext. Matching uses `BankAccount.ibanHash` ("matching without
+ *     decryption", per the schema comment) and display uses `ibanLast4`;
+ *   - adding it here would make the extension decrypt on read, and `app/api/debug/db/route.ts`
+ *     selects `accounts: true` — so a field that is currently write-only ciphertext would start
+ *     leaving that route in plaintext.
+ *
+ * So the rule for this table is narrower than "what is encrypted": it is "what is encrypted AND
+ * needs to come back". Anything encrypted at a call site belongs in this note instead.
  */
 export const PII_FIELDS: Record<string, string[]> = {
   PaymentMethod: ["iban", "accountHolder", "mbwayPhone"],

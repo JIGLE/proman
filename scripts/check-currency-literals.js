@@ -31,17 +31,29 @@ async function walk(dir) {
       }
       const lines = content.split(/\r?\n/);
       // Skip the currency symbol definition file (it contains intentional mappings)
-      if (/\/lib\/currency\.(ts|js)$/.test(p.replace(/\\/g, "/"))) continue;
+      const posix = p.replace(/\\/g, "/");
+      // A currency symbol table is the one place a "$" literal belongs. There are TWO of them —
+      // `lib/currency.ts` (CURRENCY_SYMBOL, 4 importers) and `lib/utils/currency.ts`
+      // (CURRENCY_SYMBOLS, 8 importers) — which is duplication worth collapsing, but that is a
+      // code change, not a checker change. The old exclusion named only the first, so the second
+      // was reported and this checker exited 1 forever, which is why nothing ran it.
+      if (/\/lib\/(utils\/)?currency\.(ts|js)$/.test(posix)) continue;
+      // Tests are not user-facing output. This rule exists to stop a hardcoded symbol reaching a
+      // screen; a mock formatter asserting "$0.00" cannot.
+      if (/\.(test|spec)\.(ts|tsx|js|jsx)$/.test(posix)) continue;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         // Conservative patterns: $ followed by digit (e.g. $100), quoted "$" + var, or standalone "$" string
+        // `$1`-`$9` in a .replace() are capture-group backreferences, not currency. Two of the
+        // three historical "findings" were exactly this, which is why this checker sat unwired.
+        const withoutBackrefs = /\.replace\(/.test(line) ? line.replace(/\$[1-9]/g, "") : line;
         if (
-          /\$[0-9]/.test(line) ||
-          /"\$"\s*\+/.test(line) ||
-          /'\$'\s*\+/.test(line) ||
-          /"\$"/.test(line) ||
-          /'\$'/.test(line)
+          /\$[0-9]/.test(withoutBackrefs) ||
+          /"\$"\s*\+/.test(withoutBackrefs) ||
+          /'\$'\s*\+/.test(withoutBackrefs) ||
+          /"\$"/.test(withoutBackrefs) ||
+          /'\$'/.test(withoutBackrefs)
         ) {
           findings.push({ file: p, line: i + 1, text: line.trim() });
         }

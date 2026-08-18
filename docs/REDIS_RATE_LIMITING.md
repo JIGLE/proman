@@ -481,8 +481,8 @@ Deploying with Redis rate limiting:
 
 ### Related Documentation:
 
-- [docs/WEEK_1_COMPLETE.md](WEEK_1_COMPLETE.md) - Initial rate limiting implementation
-- [docs/WEEK_2_SECURITY_COMPLETE.md](WEEK_2_SECURITY_COMPLETE.md) - Security overview
+- [Security guide](SECURITY.md) — operational security overview
+  (the WEEK_1/WEEK_2 implementation summaries were deleted on 2026-08-17; see git history)
 
 ## References
 

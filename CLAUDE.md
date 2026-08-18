@@ -82,7 +82,7 @@ e2e/                # Playwright E2E tests
 - **AppContext**: All entities (properties, tenants, leases, receipts, expenses, tickets, buildings…) live in `AppState` via `lib/contexts/app-context.tsx` (composed from `use-app-data.ts` + `use-entity-actions.ts` + `create-entity-actions.ts`). Mutations go through typed actions (`addProperty`, `updateTenant`, etc.). Bank/tax/OCR domains (added in the Situs rebrand) are read via dedicated fetches in their own components instead — they don't live in `AppState`.
 - **API routes**: Each domain has its own folder under `app/api/`. Use `GET`/`POST`/`PUT`/`DELETE` handlers with Zod validation and NextAuth session checks.
 - **Compliance**: PT (`/api/compliance/rent-receipts`) and ES (`/api/compliance/nrua`) endpoints generate fiscal payloads. Tax logic lives in `app/api/tax/`.
-- **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/utils/pii-encryption.ts` (`encryptPII`/`decryptPII`, keyed off `PII_ENCRYPTION_KEY`). `PII_FIELDS` declares which model fields are covered — see `docs/PRODUCT_AUDIT_2026.md` §5 for wiring status. **Fails closed in production**: `lib/utils/env.ts` exits if `PII_ENCRYPTION_KEY` is absent, because `encryptPII` silently returns plaintext without it. `ALLOW_UNENCRYPTED_PII=true` waives the check and warns loudly on every start.
+- **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/utils/pii-encryption.ts` (`encryptPII`/`decryptPII`, keyed off `PII_ENCRYPTION_KEY`). `PII_FIELDS` declares the fields the Prisma extension encrypts on write and decrypts on read — **not** the complete list of encrypted PII. `BankAccount.iban` is encrypted at the call site in `lib/services/bank/consent.ts` and never decrypted (matching uses `ibanHash`, display uses `ibanLast4`); adding it to `PII_FIELDS` would make `/api/debug/db` start returning it in plaintext. See `docs/PRODUCT_AUDIT_2026.md` §5 for wiring status. **Fails closed in production**: `lib/utils/env.ts` exits if `PII_ENCRYPTION_KEY` is absent, because `encryptPII` silently returns plaintext without it. `ALLOW_UNENCRYPTED_PII=true` waives the check and warns loudly on every start.
 - **Reference-month rent ledger** (Situs): `RentPeriod` is the persisted-derived spine — one row per lease per reference month, `status` recomputed in the same transaction as every allocation write (never hand-set). The waterfall invariant: always fill the oldest not-fully-allocated period first (`lib/services/allocation/engine.ts`, pure). `Tenant.paymentStatus` is fully derived from this ledger — the API layer refuses manual overrides.
 - **Bank matching**: CSV/manual import **or a live provider sync** → fingerprint dedupe (idempotent) → fuzzy-duplicate check → reconciliation rules → weighted confidence scoring (`lib/services/matching/engine.ts`, pure). ≥0.85 auto-allocates via a draft `Receipt` (`source: "automation"`); below that, the row waits in the Bank Movements inbox (Finance tab) for a human to confirm/reassign/ignore.
 - **Live bank connection**: PSD2 account information (`lib/services/bank/providers/`, GoCardless today). A provider's only job is to return `BankCsvRow[]`; `importBankRows`' optional `target` points those rows at the right connection/account, so a synced movement inherits the entire pipeline above and behaves identically to an uploaded one. Consent lives in `consent.ts` — unguessable reference, scoped to the caller, single-use. `sync.ts` enforces the provider's daily read budget **before** spending a call (429 costs the rest of the day) and marks a connection `expired` on `ConsentExpiredError` rather than reporting a quiet zero. `BankConnection.provider` is `psd2_<key>` for a real bank and `manual`/`csv` otherwise; never offer a sync to the latter.
@@ -143,9 +143,36 @@ PR → `publish` tags → the tag push triggers `deploy-ghcr.yml`. Only a tag pu
   enforced nothing.
 - TypeScript: strict mode, `noEmit` check must pass
 
+## Repo hygiene
+
+Four rules, each of which the repo has already broken. `npm run hygiene` enforces them and runs
+inside `verify:ci`, so CI, the `situs-implementer` agent and any local run all pick it up.
+
+1. **Point-in-time records are deleted, not archived.** Git history is the archive. `docs/archive/`
+   held 27 files and was removed; do not recreate it. `git log --diff-filter=D --name-only` finds
+   anything you need.
+2. **Every file under `docs/` is reachable from `docs/README.md`.** Adding a doc means adding the
+   link in the same commit. 24 were reachable from nothing before this was checked — and three of
+   those documented live code, so "unreferenced" never means "safe to delete" on its own.
+3. **A document that states a fact about what exists is a claim with an expiry.** "There is no live
+   bank connection", "nothing publishes on merge", a version number, a branch name. The commit that
+   makes one false is the commit that rewrites it. When you retire one, add it to `RETIRED_CLAIMS`
+   in `scripts/check-docs.js` so it cannot come back. Prefer deriving a status from state over
+   asserting it in prose — `bankCheck` in `lib/services/admin/system-status.ts` is the pattern.
+4. **A checker nothing runs is not a checker.** `scripts/check-*` belongs in `npm run hygiene` or
+   it does not belong in the repo. Nine existed and CI ran two; the other seven passed or failed
+   into the void for months. Two are deliberately **not** gates and must stay out:
+   `check-hostport.js` (a prestart runtime check, skips unless `PRESTART_CHECK_HOSTPORT=true`) and
+   `i18n-leak-scan.mjs` (a dev tool taking path arguments). Wiring either would produce a gate that
+   passes because it skipped.
+
 ## Development Branch
 
-All Claude Code changes go to: **`claude/situs-design-polish-6zpz2f`**
+All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
+
+The name says `proman` because the branch predates the rename to Situs and renaming it now would
+orphan the open history. Do not "correct" it to `situs-…` — this line said that for a while and
+sent sessions looking for a branch that does not exist.
 
 ## Subagents (`.claude/agents/`)
 

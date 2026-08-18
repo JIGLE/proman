@@ -24,7 +24,14 @@
       "Bash(npx prisma generate)",
       "Bash(npx tsc --noEmit)",
       "mcp__github__pull_request_read",
-      "mcp__github__get_job_logs"
+      "mcp__github__get_job_logs",
+      "Bash(npm run hygiene)",
+      "Bash(npm run docs:check)",
+      "Bash(node scripts/check-docs.js)",
+      "Bash(npm run i18n:check:strict)",
+      "Bash(npm run lint:colors)",
+      "Bash(npm run currency:check)",
+      "Bash(npm run actions:check)"
     ]
   }
 }

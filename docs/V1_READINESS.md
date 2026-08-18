@@ -182,7 +182,8 @@ pass unchanged, proving no behaviour change). Applied to `income-summary`'s `gro
   versions stale, in the file loaded into every AI session.
 - 15 API routes echo `error.message` into a 500 body. Most are health/debug/download endpoints, so
   low exposure, but `/api/distributions` is user-facing.
-- `docs/archive/` (376K) and `docs/archived-workflows/` (28K) still describe the Helm/Kubernetes
+- ~~`docs/archive/` (376K) and `docs/archived-workflows/` (28K) still describe the Helm/Kubernetes~~
+  **Resolved 2026-08-17**: both directories deleted. Git history retains them. Originally:
   deployment path removed in PR #328.
 
 **UNVERIFIED**: empty states, loading states, table sorting/filtering, form validation behaviour
@@ -223,14 +224,24 @@ movement through allocation to rent-period status.
 ## External integrations — honest status
 
 ```
-Bank:        Manual / CSV import only. No live bank connection exists.
-             Provider abstraction: UNVERIFIED — CSV import may be hard-wired.
+Bank:        LIVE where a bank has been connected — PSD2 account information
+             (GoCardless). Simulated / CSV-only where none is. Provider
+             abstraction: VERIFIED — lib/services/bank/providers/ with a
+             registry, and importBankRows takes a target so a synced movement
+             uses the same pipeline as an uploaded one.
 
 Portugal:    Sandbox / review / preparation only. No live AT endpoint.
-             ⚠️ Connector does not enforce this — see D1.
+             Enforced: pt-at.ts calls refuseUnsupportedMode (D1 closed).
 
-Spain:       No TaxConnector implementation. NRUA export exists outside the abstraction.
+Spain:       Sandbox / review / preparation only. No live MITMA endpoint.
+             es-nrua.ts is registered in the connector registry and calls the
+             same shared mode guard.
 ```
+
+Three of these lines were stale as of 2026-08-17 and are corrected here: the bank was described as
+CSV-only with an unverified abstraction, Portugal as unenforced, and Spain as having no connector at
+all. Each had been fixed in code without this block being reread. **Treat every line here as a claim
+with an expiry** — the commit that makes one false is the commit that rewrites it.
 
 ---
 
@@ -247,7 +258,7 @@ Spain:       No TaxConnector implementation. NRUA export exists outside the abst
 
 **P2 — strongly desirable** 7. UX pass: empty/loading/error states, financial display completeness. _(medium — scope unknown until sampled)_ 8. Move ES/NRUA behind `TaxConnector`. _(medium)_ 9. Portal token revocation. _(small)_ 10. Analytics float rounding; stop echoing `error.message` in user-facing 500s. _(small)_
 
-**P3 — defer** 11. Doc consolidation, `docs/archive*` pruning, `CLAUDE.md` version. _(small)_
+**P3 — done 2026-08-17** 11. Doc consolidation, `docs/archive*` pruning, `CLAUDE.md` version.
 
 ---
 

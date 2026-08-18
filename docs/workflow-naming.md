@@ -33,8 +33,9 @@ Retired:
 - `production.yml` ("Production Gate") — deleted. It duplicated `ci.yml`'s verify and build on
   the same `push: main` event, and its version-integrity check raced `release.yml` for the tag
   it was checking against. Both of its real checks moved into `release.yml`.
-- Older workflows moved to `docs/archived-workflows/` to avoid accidental execution. Kept for
-  reference only — see `docs/ARCHIVED.md`. Note these still describe the Helm/Kubernetes
+- Superseded workflows are **deleted**, not parked. `docs/archived-workflows/` held
+  `publish-ghcr.yml`, `create-release.yml` and `dependabot-auto-merge.yml`; all three were removed
+  on 2026-08-17 because the current five had replaced them and they still described the Helm/Kubernetes
   deployment path that no longer exists.
 
 Guidelines:
@@ -67,5 +68,17 @@ Guidelines:
   before concluding anything about it: it names a file, a line and a rule. Twice now the short
   runtime has been misread as "it did nothing", once in a way that nearly argued for disabling
   code scanning to silence a true positive.
+- **An npm alias is not a caller.** `scripts/` held nine checker scripts and CI's `run:` steps
+  invoked two; the other seven had `package.json` aliases and nothing that depended on them, so
+  they passed or failed into the void for months. One had been exiting 1 the whole time on false
+  positives, and another's ratchet baseline had drifted 11 above its real count because nothing
+  measured it. Gates now go in `npm run hygiene`, which `verify:ci` calls — one insertion point, so
+  CI, agents and local runs all get them without knowing they exist.
+- **Two scripts are deliberately not gates**, and wiring them would create exactly the false green
+  this file warns about:
+  - `scripts/check-hostport.js` skips unless `PRESTART_CHECK_HOSTPORT=true`. It is a prestart
+    runtime check; in CI it would pass by skipping.
+  - `scripts/i18n-leak-scan.mjs` takes path arguments and exits 2 with a usage message when given
+    none. It is a dev tool, not a gate.
 - Update this file whenever a workflow is added, renamed, or retired — it drifted out of sync
   with the actual `.github/workflows/` contents once already; don't let that happen again.

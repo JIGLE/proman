@@ -264,6 +264,7 @@ API routes have co-located test files:
 
 ## Further Documentation
 
-- [Authentication Guide](./authentication.md)
-- [Webhooks Guide](../../SENDGRID_WEBHOOKS.md)
-- [Deployment Guide](../../deployment_guide.md)
+- [Security guide](../SECURITY.md) — auth, HMAC enforcement, secrets
+- [SendGrid webhooks](../integrations/SENDGRID_WEBHOOKS.md)
+- [Deployment Guide](../deployment.md) — Docker
+- [TrueNAS SCALE Guide](../truenas.md)

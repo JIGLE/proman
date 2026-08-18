@@ -1,5 +1,17 @@
 # Releases
 
+> **Not the authoritative record, and not current.** This file is hand-maintained and stopped being
+> updated at **v1.13.0**; the shipped version is in `package.json` and has moved on well past it.
+> For what actually released, read the git tags and the GitHub Releases page — those are written by
+> `release.yml`, so they cannot drift.
+>
+> It is kept because it records which **image tag** carried which change, which the tags alone do
+> not, and because the notes below explain _why_ several releases happened. Entries stop rather than
+> being back-filled: inventing history to close a gap would be worse than showing the gap.
+>
+> Image names below read `ghcr.io/jigle/proman:…`, which is what was published at the time. The
+> repository is now `situs`; those older tags were not renamed.
+
 - Date: 2026-05-04
   - Version: v1.13.0
   - Image: `ghcr.io/jigle/proman:1.13.0`
@@ -60,7 +72,7 @@
     - **Formatting**: Added `.prettierrc` and `.prettierignore`; formatted 413 files for consistent style; fixed YAML indentation in production.yml
     - **Testing**: Added 36 payment service tests (singleton, Stripe integration, webhooks, transactions); total: 52 test files, 541 tests passing
     - **Documentation**: Corrected README database type (PostgreSQL→SQLite), version (1.4.0→1.7.1), test counts (37/86→52/541); added Demo Mode section
-    - **Cleanup**: Deleted 5 stale output files; moved 8 analysis docs to docs/archive/; updated .gitignore
+    - **Cleanup**: Deleted 5 stale output files; moved 8 analysis docs to docs/archive/ (that directory was deleted 2026-08-17); updated .gitignore
     - **i18n**: Verified 460 keys × 3 locales (pt, en, es) all in sync
     - **Verification**: `tsc --noEmit` clean, `eslint --max-warnings=0` clean, `prettier --check .` clean, 52/52 test files passing (541 tests)
 
@@ -133,7 +145,7 @@
 - Date: TBD
   - Version: v0.9.0
   - Image: `ghcr.io/jigle/proman:0.9.0`
-  - Notes: See [RELEASE_NOTES_v0.9.0.md](./RELEASE_NOTES_v0.9.0.md) for details
+  - Notes: the per-version release notes files were deleted on 2026-08-17; see the v0.9.0 tag
 
 - Date: 2026-02-01
   - Version: v0.8.3

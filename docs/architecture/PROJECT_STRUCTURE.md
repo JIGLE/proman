@@ -114,7 +114,6 @@ situs/
 ├── docs/                         # Documentation
 │   ├── architecture/            # Technical documentation
 │   │   ├── API_ROUTES.md        # Complete API reference
-│   │   └── IMPORT_MIGRATION_GUIDE.md
 │   ├── deployment/              # Deployment guides
 │   │   └── ... (TrueNAS docs)
 │   ├── integrations/            # External service docs
@@ -254,7 +253,7 @@ Granular path aliases for cleaner imports:
 ### 📚 Comprehensive Documentation
 
 - **API Reference**: Complete API documentation in [docs/architecture/API_ROUTES.md](docs/architecture/API_ROUTES.md)
-- **Import Guide**: Migration guide in [docs/architecture/IMPORT_MIGRATION_GUIDE.md](docs/architecture/IMPORT_MIGRATION_GUIDE.md)
+- **Directory layout**: also summarised in `CLAUDE.md`, which is the version kept current
 - **Deployment**: TrueNAS guide in `docs/truenas.md`
 - **Storybook**: Component documentation guide in [docs/ux/STORYBOOK_GUIDE.md](docs/ux/STORYBOOK_GUIDE.md)
 
@@ -398,11 +397,11 @@ See [TrueNAS SCALE Guide](../truenas.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Proprietary - All Rights Reserved. See [LICENSE](../LICENSE)
+Proprietary - All Rights Reserved. See [LICENSE](../../LICENSE)
 
 ---
 

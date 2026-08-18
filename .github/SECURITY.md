@@ -16,7 +16,7 @@ Only the latest release on `main` receives security updates. We recommend always
 Instead, use one of the following methods:
 
 1. **GitHub Security Advisories (preferred):**
-   Navigate to the [Security Advisories](../../security/advisories/new) tab and create a new private advisory. This allows us to collaborate on a fix before public disclosure.
+   Navigate to the [Security Advisories](https://github.com/JIGLE/situs/security/advisories/new) tab and create a new private advisory. This allows us to collaborate on a fix before public disclosure.
 
 2. **Email:**
    Send details to the repository owner listed in `package.json`. Include:
@@ -62,7 +62,7 @@ This project implements the following security controls:
 - **Runtime**: CSP headers with nonce-based script loading, CSRF protection, rate limiting
 - **Authentication**: NextAuth.js with short-lived JWT sessions
 
-For operational security details, see [docs/SECURITY.md](docs/SECURITY.md).
+For operational security details, see [docs/SECURITY.md](../docs/SECURITY.md).
 
 ## Disclosure Policy
 

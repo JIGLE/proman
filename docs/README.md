@@ -1,78 +1,115 @@
 # Situs Documentation Index
 
-Welcome to the Situs documentation. This index links to all available guides.
+**Every `.md` under `docs/` is listed here.** That is not a courtesy — it is enforced by
+`scripts/check-docs.js`, which fails the build on any file in this directory that this index does
+not reach. A doc nobody can find is a doc nobody maintains, and 24 of them had accumulated before
+the rule existed.
 
-## Getting Started
+Add a doc → add its link here, in the same commit.
 
-- [Quick Start & README](../README.md) — Install, run, and deploy in minutes
-- [.env.example](../.env.example) — Full list of environment variables with defaults
-- [Roadmap](../ROADMAP.md) — Living single source of truth for shipped work + the **Decisions Log** (authoritative for architectural/IA decisions)
-- [Development Roadmap](DEVELOPMENT_ROADMAP.md) — What's planned next
-- [Sprint Board (2026 Q3)](SPRINT_BOARD_2026Q3.md) — Current execution board for the roadmap
+## Getting started
 
-## Strategy & Audits (current)
+- [Quick start & README](../README.md) — install, run, deploy
+- [.env.example](../.env.example) — every environment variable with defaults
+- [CLAUDE.md](../CLAUDE.md) — architecture, key patterns, CI gates, repo hygiene rules
+- [Roadmap](../ROADMAP.md) — the **only** roadmap: shipped work plus the authoritative Decisions Log
+- [Dev auth setup](DEV_AUTH_SETUP.md) — run the app without a database (`NEXT_PUBLIC_DEV_AUTH`)
 
-- [Product Audit 2026](PRODUCT_AUDIT_2026.md) — Product strategy, habit model, North-Star proposal
-- [UX Audit 2026](UX_AUDIT_2026.md) — Canonical IA and the reconciled backlog status table
-- [Architecture, Governance & Cognitive-Load Audit 2026](ARCHITECTURE_GOVERNANCE_AUDIT_2026.md) — Per-screen density + docs-vs-code drift
-- [Mobile UX Audit](MOBILE_UX_AUDIT.md) — Mobile-first, behavioural findings
-- [Design Award](DESIGN_AWARD.md) — Visual/token craft loop and scorecard
+## Pilot readiness
+
+- [V1 checklist](V1_CHECKLIST.md) — living tracker; what is open and what closed it
+- [V1 readiness assessment](V1_READINESS.md) — the dated review that produced the checklist
+
+Both carry an **integration status block**. Those lines are claims with an expiry: the commit that
+makes one false is the commit that rewrites it.
+
+## Strategy & audits
+
+Dated, point-in-time, and still load-bearing where noted:
+
+- [Product audit 2026](PRODUCT_AUDIT_2026.md) — product strategy, habit model, North Star.
+  §5 is cited by `CLAUDE.md` for PII wiring status
+- [UX audit 2026](UX_AUDIT_2026.md) — canonical IA and the reconciled backlog table
+- [Architecture & governance audit 2026](ARCHITECTURE_GOVERNANCE_AUDIT_2026.md) — per-screen
+  density plus docs-vs-code drift
+- [Mobile UX audit](MOBILE_UX_AUDIT.md) — mobile-first behavioural findings
+- [UX improvement plan](UX_IMPROVEMENT_PLAN.md)
+- [Design award](DESIGN_AWARD.md) — visual/token craft loop and scorecard
 
 ## Deployment
 
-- [Deployment Guide](deployment.md) — Docker deployment instructions
-- [TrueNAS SCALE Guide](truenas.md) — TrueNAS-specific setup, values, and troubleshooting
-- [Troubleshooting](troubleshooting.md) — Common issues and solutions
-- [Production Deployment Checklist](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
+- [Docker deployment](deployment.md)
+- [TrueNAS SCALE](truenas.md) — the full guide: image channels, storage, bank setup, troubleshooting
+- [Troubleshooting](troubleshooting.md)
+- [Production deployment checklist](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
+- [Workflow naming](workflow-naming.md) — CI/release conventions, and why superseded workflows are
+  deleted rather than parked
 
-## Architecture & Design
+## Architecture
 
-- [Architecture Overview](architecture/)
-- [Database Strategy](DATABASE_STRATEGY.md) — SQLite vs PostgreSQL, migrations, backups
-- [Performance Optimizations](PERFORMANCE_OPTIMIZATIONS.md)
+- [Project structure](architecture/PROJECT_STRUCTURE.md)
+- [API routes](architecture/API_ROUTES.md)
+- [Optimization](architecture/OPTIMIZATION.md)
+- [Database strategy](DATABASE_STRATEGY.md) — SQLite vs PostgreSQL, migrations, backups
+- [Performance optimizations](PERFORMANCE_OPTIMIZATIONS.md)
 
 ## Security
 
-- [Security Guide](SECURITY.md) — HMAC enforcement, init endpoint hardening, secrets management
-- [Security Testing](SECURITY_TESTING.md)
-- [CSP Nonce Implementation](CSP_NONCE_IMPLEMENTATION.md)
-- [CSRF Integration](CSRF_INTEGRATION.md)
+- [Security guide](SECURITY.md) — HMAC enforcement, init endpoint hardening, secrets
+- [Security testing](SECURITY_TESTING.md)
+- [CSP nonce implementation](CSP_NONCE_IMPLEMENTATION.md)
+- [CSRF integration](CSRF_INTEGRATION.md)
 
-## Monitoring & Observability
+## Monitoring
 
-- [Metrics & Monitoring Guide](METRICS_AND_MONITORING.md) — Structured logging, Prometheus, Grafana
-- [Monitoring Quick Reference](MONITORING_QUICK_REFERENCE.md)
-- [Monitoring Setup](MONITORING_SETUP.md)
+- [Metrics & monitoring](METRICS_AND_MONITORING.md) — structured logging, Prometheus, Grafana
+- [Monitoring setup](MONITORING_SETUP.md)
+- [Monitoring quick reference](MONITORING_QUICK_REFERENCE.md)
 
 ## Integrations
 
-- [Bizum Integration](BIZUM_INTEGRATION.md)
-- [Email Retry Logic](EMAIL_RETRY_LOGIC.md)
-- [Redis Rate Limiting](REDIS_RATE_LIMITING.md)
-- [Webhook Templates](webhook-templates.md)
+- [Government verification](integrations/GOVERNMENT_VERIFICATION.md) — the ownership-verification
+  scaffold behind `GovernmentVerification` / `PropertyVerificationClaim`
+- [SendGrid webhooks](integrations/SENDGRID_WEBHOOKS.md)
+- [Email retry logic](EMAIL_RETRY_LOGIC.md)
+- [Bizum integration](BIZUM_INTEGRATION.md)
+- [Redis rate limiting](REDIS_RATE_LIMITING.md)
+- [Webhook templates](webhook-templates.md)
 
-## UX & Accessibility
+Bank connections (PSD2 / GoCardless) are documented in [truenas.md](truenas.md#connecting-a-bank-optional)
+and `CLAUDE.md`, because setup is deployment-shaped rather than integration-shaped.
 
-- [UI Consistency Guide](UI_CONSISTENCY_GUIDE.md)
-- [Accessibility Improvements](ACCESSIBILITY_IMPROVEMENTS.md)
-- [Accessibility Quick Reference](ACCESSIBILITY_QUICK_REFERENCE.md)
-- [Storybook Guide](ux/STORYBOOK_GUIDE.md)
+## UX & accessibility
+
+- [UI consistency guide](UI_CONSISTENCY_GUIDE.md)
+- [Accessibility improvements](ACCESSIBILITY_IMPROVEMENTS.md)
+- [Accessibility quick reference](ACCESSIBILITY_QUICK_REFERENCE.md)
+- [Accessibility testing](ACCESSIBILITY_TESTING.md) — adding axe checks to Playwright
+- [Storybook guide](ux/STORYBOOK_GUIDE.md)
 
 ## Testing
 
-- [Load Testing](LOAD_TESTING.md)
-- [Playwright E2E Guide](../playwright/README.md)
-- [Security Testing](SECURITY_TESTING.md)
+- [Load testing](LOAD_TESTING.md)
+- [Security testing](SECURITY_TESTING.md)
+- [Playwright E2E guide](../playwright/README.md)
 
 ## Contributing
 
-- [Contributing Guide](../CONTRIBUTING.md)
-- [Releases](../RELEASES.md)
-- [Workflow Naming](workflow-naming.md)
+- [Contributing guide](../CONTRIBUTING.md)
+- [Code of conduct](../CODE_OF_CONDUCT.md)
+- [Releases](../RELEASES.md) — historical ledger to v1.13.0; git tags and GitHub Releases are
+  authoritative
 
-## Archive
+## Where the archive went
 
-Superseded and point-in-time documents (completed phase summaries, dated audits, status
-snapshots) move to [`archive/`](archive/) rather than staying at the top level — see
-[`ARCHIVED.md`](ARCHIVED.md) for the parallel convention covering retired GitHub Actions
-workflows. Kept for historical reference only; not authoritative.
+`docs/archive/` (27 files) and `docs/archived-workflows/` (3 workflows) were **deleted** on
+2026-08-17, along with 18 other point-in-time records — completed phase summaries, one-off migration
+notes, release notes for 7 of 24 versions, and a second stale TrueNAS guide that competed with
+`truenas.md`.
+
+Git history retains all of it. An archive directory is a slower delete that still costs search
+noise and reading time, and `docs/archive/README.md` had already made that argument itself while
+deferring the call to the repository owner.
+
+**The convention now: point-in-time records are deleted, not parked.** `git log --diff-filter=D
+--name-only` finds anything you need.

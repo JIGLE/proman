@@ -61,7 +61,10 @@ const ALLOWLIST = [
  * and never removed — Contracts, Buildings and Invoices. None had an importer; the
  * first two sat behind routes that redirect elsewhere.
  */
-const BASELINE = 571;
+// Tightened 571 → 560 on 2026-08-17, when this checker was first wired into `verify:ci`. It had
+// never run, so the baseline had drifted 11 above the real count and the ratchet had 11 units of
+// slack it was never meant to have. Lower this whenever the count drops; never raise it.
+const BASELINE = 560;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
