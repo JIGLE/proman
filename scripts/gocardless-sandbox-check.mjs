@@ -28,8 +28,9 @@
  * visited first — pass the requisition id back in with --requisition=<id> for a second pass.
  */
 
-const API_BASE = process.env.GOCARDLESS_API_BASE?.replace(/\/+$/, "")
-  || "https://bankaccountdata.gocardless.com/api/v2";
+const API_BASE =
+  process.env.GOCARDLESS_API_BASE?.replace(/\/+$/, "") ||
+  "https://bankaccountdata.gocardless.com/api/v2";
 
 /** The sandbox institution: a real API call against test data, not a mock. */
 const SANDBOX_INSTITUTION = "SANDBOXFINANCE_SFIN0000";
@@ -158,7 +159,9 @@ async function main() {
     requisitionId = requisition?.id;
     if (requisition?.link) {
       console.error(`\n  ▸ Open this to grant sandbox consent, then re-run with:`);
-      console.error(`      node scripts/gocardless-sandbox-check.mjs --requisition=${requisitionId}`);
+      console.error(
+        `      node scripts/gocardless-sandbox-check.mjs --requisition=${requisitionId}`,
+      );
       console.error(`    ${requisition.link}\n`);
     }
   }
@@ -180,7 +183,13 @@ async function main() {
 
 function dump() {
   console.error("\n──────── paste everything below this line ────────\n");
-  console.log(JSON.stringify({ apiBase: API_BASE, recordedAt: new Date().toISOString(), transcript }, null, 2));
+  console.log(
+    JSON.stringify(
+      { apiBase: API_BASE, recordedAt: new Date().toISOString(), transcript },
+      null,
+      2,
+    ),
+  );
 }
 
 main().catch((err) => {
