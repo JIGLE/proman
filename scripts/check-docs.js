@@ -54,6 +54,13 @@ const RETIRED_CLAIMS = [
     retired: "2026-08-17",
     because: "that branch has never existed; the real one is claude/proman-design-polish-6zpz2f",
   },
+  {
+    pattern: /GHSA-c96f-x56v-gq3h/,
+    retired: "2026-08-18",
+    because:
+      "find-my-way was fixed by an overrides entry; the audit allowlist that carried this " +
+      "advisory is gone from security-scan.yml, and it swallowed a real finding before it went",
+  },
 ];
 
 /** Lines allowed to mention a retired claim, because they are the record of its retirement. */
