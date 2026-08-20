@@ -12,8 +12,12 @@
  * This script replaces that guess with a recording. It never writes to the app's database and
  * never mutates anything at the provider — it reads, redacts, and prints.
  *
- *   ENABLE_BANKING_APPLICATION_ID=… ENABLE_BANKING_PRIVATE_KEY="$(cat app.pem)" \
+ *   ENABLE_BANKING_APPLICATION_ID=… ENABLE_BANKING_PRIVATE_KEY_FILE=/path/to/app.pem \
  *     node scripts/enablebanking-check.mjs --country PT
+ *
+ * `ENABLE_BANKING_PRIVATE_KEY` still works for a quick local run, but the file is what a real
+ * deployment uses — a PEM is too long for some config fields, and an env var holding a private key
+ * is readable from /proc/<pid>/environ besides.
  *
  * Add `--session <session_id>` to record accounts and transactions from a consent you already
  * completed in the app; without it the script stops after listing ASPSPs, which needs no consent.
@@ -24,6 +28,7 @@
  */
 
 import crypto from "node:crypto";
+import { readFileSync } from "node:fs";
 
 const API_BASE =
   process.env.ENABLE_BANKING_API_BASE?.replace(/\/+$/, "") ?? "https://api.enablebanking.com";
@@ -43,17 +48,34 @@ function base64url(value) {
 
 function buildJwt() {
   const applicationId = process.env.ENABLE_BANKING_APPLICATION_ID?.trim();
-  const rawKey = process.env.ENABLE_BANKING_PRIVATE_KEY?.trim();
-  if (!applicationId || !rawKey) {
+  const keyFile = process.env.ENABLE_BANKING_PRIVATE_KEY_FILE?.trim();
+  const inline = process.env.ENABLE_BANKING_PRIVATE_KEY?.trim();
+
+  if (!applicationId || (!keyFile && !inline)) {
     console.error(
-      "Set ENABLE_BANKING_APPLICATION_ID and ENABLE_BANKING_PRIVATE_KEY.\n" +
-        'The key may be the PEM itself, e.g. ENABLE_BANKING_PRIVATE_KEY="$(cat <app-id>.pem)".',
+      "Set ENABLE_BANKING_APPLICATION_ID, plus one of:\n" +
+        "  ENABLE_BANKING_PRIVATE_KEY_FILE=/path/to/<app-id>.pem   (what a deployment uses)\n" +
+        '  ENABLE_BANKING_PRIVATE_KEY="$(cat <app-id>.pem)"        (fine for a local run)',
     );
     process.exit(2);
   }
-  const privateKey = rawKey.includes("-----BEGIN")
-    ? rawKey
-    : Buffer.from(rawKey, "base64").toString("utf8");
+
+  // Same precedence as the adapter: the file wins, so this script cannot pass where the app fails.
+  let privateKey;
+  if (keyFile) {
+    try {
+      privateKey = readFileSync(keyFile, "utf8").trim();
+    } catch (error) {
+      console.error(
+        `Could not read ENABLE_BANKING_PRIVATE_KEY_FILE "${keyFile}": ${error.message}`,
+      );
+      process.exit(2);
+    }
+  } else {
+    privateKey = inline.includes("-----BEGIN")
+      ? inline
+      : Buffer.from(inline, "base64").toString("utf8");
+  }
 
   const iat = Math.floor(Date.now() / 1000);
   const header = base64url(JSON.stringify({ typ: "JWT", alg: "RS256", kid: applicationId }));

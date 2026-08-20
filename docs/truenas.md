@@ -118,11 +118,32 @@ exactly the self-hosted case; their paid tiers are for products aggregating othe
    `https://<your-host>/api/bank/connections/callback`. It must match `NEXTAUTH_URL`, because
    Enable Banking validates the redirect against that list rather than accepting whatever is sent.
 4. For a Production application, whitelist your own accounts to activate restricted mode.
-5. Set `ENABLE_BANKING_APPLICATION_ID` and `ENABLE_BANKING_PRIVATE_KEY`, then restart. The key is a
-   multi-line PEM; where an env field mangles that — TrueNAS' app config does — base64-encode it and
-   the app will detect which form it received.
+5. Set `ENABLE_BANKING_APPLICATION_ID`, and give the app the key **as a file** (see below), then
+   restart.
 6. Settings › Integrations → **Connect a bank**. You authorise at your own bank; Situs never sees
    your banking password.
+
+### The private key goes in a file, not an environment variable
+
+TrueNAS caps an app-config value at **1,000 characters**. An RSA-2048 PEM is around 1,700, and
+base64-encoding it makes it ~2,272 — so there is no encoding that fits. Mount it instead, which is
+what you would want anyway: an environment variable holding a private key is readable from
+`/proc/<pid>/environ`, shows up in process listings and crash dumps, and is echoed by any diagnostic
+that prints the environment. A file with `0400` is none of those.
+
+1. Put the `.pem` somewhere on the host the app can reach, e.g. `/mnt/tank/situs/secrets/app.pem`,
+   owned by the app's user and `chmod 400`.
+2. In the custom app's **Storage** section add a host-path volume, **read-only**:
+   host `/mnt/tank/situs/secrets` → container `/app/secrets`.
+3. Set `ENABLE_BANKING_PRIVATE_KEY_FILE=/app/secrets/app.pem`.
+
+Leave `ENABLE_BANKING_PRIVATE_KEY` unset. If both are set the file wins, but a leftover inline value
+is exactly the sort of thing that later produces an unexplained 401.
+
+If the path cannot be read, the app says so and names the path rather than quietly reporting "no
+bank provider configured" — a misconfigured instance and a deliberately CSV-only one must not look
+the same. And if you ever see `DECODER routines::unsupported`, that is a PEM whose newlines were
+lost on the way into a single-line field; the file route avoids it entirely.
 
 To confirm the credentials and record what the API actually returns:
 

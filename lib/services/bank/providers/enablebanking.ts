@@ -21,6 +21,7 @@
  */
 
 import crypto from "crypto";
+import { readFileSync } from "node:fs";
 
 import type { BankCsvRow } from "../csv";
 import type {
@@ -108,22 +109,89 @@ interface EbSessionAccount {
   product?: string;
 }
 
+/**
+ * Raised when the instance is *trying* to be configured and cannot be — a named path that will
+ * not open, or a key that will not parse. Distinct from "no credentials set", which is a valid
+ * state (CSV-only) rather than a fault, and which must keep looking like one on `/admin`.
+ */
+export class EnableBankingConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EnableBankingConfigError";
+  }
+}
+
+/**
+ * The key, read once.
+ *
+ * Memoised because `isConfigured()` runs on every request that lists providers, and re-reading a
+ * file each time is waste. Keyed by source so a test — or a restart-free config change — cannot be
+ * served a stale key from a different path.
+ */
+let keyCache: { source: string; key: string } | null = null;
+
+/** Exported for tests: a module-level cache would otherwise leak between cases. */
+export function resetKeyCache(): void {
+  keyCache = null;
+}
+
+function loadPrivateKey(): string | null {
+  // A file first, and it is the documented route for a real deployment. An RSA-2048 PKCS#8 PEM is
+  // ~1,700 characters and base64 makes it ~2,272, so it does not fit in a TrueNAS app-config
+  // value at all — but the better reason is that an env var holding a private key is readable
+  // from /proc/<pid>/environ, shows up in process listings and crash dumps, and is echoed by any
+  // diagnostic that prints the environment. A mounted file with 0400 is none of those things.
+  const path = process.env.ENABLE_BANKING_PRIVATE_KEY_FILE?.trim();
+  if (path) {
+    if (keyCache?.source === path) return keyCache.key;
+    let contents: string;
+    try {
+      contents = readFileSync(path, "utf8").trim();
+    } catch (error) {
+      // Names the path, never the key. An unreadable path is a configuration mistake and has to
+      // say so — silently reporting "no provider configured" is how a misconfigured instance
+      // looks identical to an unconfigured one.
+      throw new EnableBankingConfigError(
+        `ENABLE_BANKING_PRIVATE_KEY_FILE is set to "${path}" but it could not be read: ` +
+          `${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    if (!contents) {
+      throw new EnableBankingConfigError(
+        `ENABLE_BANKING_PRIVATE_KEY_FILE points at "${path}", which is empty.`,
+      );
+    }
+    keyCache = { source: path, key: contents };
+    return contents;
+  }
+
+  const inline = process.env.ENABLE_BANKING_PRIVATE_KEY?.trim();
+  if (!inline) return null;
+  if (keyCache?.source === "inline") return keyCache.key;
+
+  // Base64 is still accepted inline, detected rather than configured — a PEM announces itself.
+  // It is no longer *recommended*: it makes an already-too-long value longer.
+  const key = inline.includes("-----BEGIN")
+    ? inline
+    : Buffer.from(inline, "base64").toString("utf8");
+  keyCache = { source: "inline", key };
+  return key;
+}
+
 function credentials(): { applicationId: string; privateKey: string } | null {
   const applicationId = process.env.ENABLE_BANKING_APPLICATION_ID?.trim();
-  const rawKey = process.env.ENABLE_BANKING_PRIVATE_KEY?.trim();
-  if (!applicationId || !rawKey) return null;
-
-  // The key is a multi-line PEM, which several deployment surfaces (TrueNAS' app config among
-  // them) handle badly in a single-line env field. Base64 is accepted as an escape hatch, and
-  // detected rather than configured: a PEM always announces itself.
-  const privateKey = rawKey.includes("-----BEGIN")
-    ? rawKey
-    : Buffer.from(rawKey, "base64").toString("utf8");
-
+  if (!applicationId) return null;
+  const privateKey = loadPrivateKey();
+  if (!privateKey) return null;
   return { applicationId, privateKey };
 }
 
-/** Whether this instance is configured to offer Enable Banking connections. */
+/**
+ * Whether this instance is configured to offer Enable Banking connections.
+ *
+ * A configuration ERROR is not "unconfigured": it propagates, so the operator sees the path that
+ * will not open rather than a silent CSV-only fallback that looks like a deliberate choice.
+ */
 export function isEnableBankingConfigured(): boolean {
   return credentials() !== null;
 }
@@ -158,10 +226,22 @@ export function buildAuthJwt(now = new Date()): string {
     }),
   );
 
-  const signature = crypto
-    .createSign("RSA-SHA256")
-    .update(`${header}.${payload}`)
-    .sign(creds.privateKey);
+  let signature: Buffer;
+  try {
+    signature = crypto
+      .createSign("RSA-SHA256")
+      .update(`${header}.${payload}`)
+      .sign(creds.privateKey);
+  } catch (error) {
+    // Overwhelmingly this is a PEM whose newlines were lost on the way into a config field —
+    // OpenSSL reports it as `DECODER routines::unsupported`, which says nothing useful to anyone
+    // who has not seen it before.
+    throw new EnableBankingConfigError(
+      "The Enable Banking private key could not be used for signing. If it was pasted into a " +
+        "single-line field its newlines were probably lost — mount the .pem and set " +
+        `ENABLE_BANKING_PRIVATE_KEY_FILE instead. (${error instanceof Error ? error.message : String(error)})`,
+    );
+  }
 
   return `${header}.${payload}.${base64url(signature)}`;
 }

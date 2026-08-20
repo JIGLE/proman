@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import crypto from "crypto";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 import {
+  EnableBankingConfigError,
+  resetKeyCache,
   buildAuthJwt,
   decodeInstitutionId,
   encodeInstitutionId,
@@ -25,17 +30,17 @@ function configure(key: string = privateKey) {
   process.env.ENABLE_BANKING_PRIVATE_KEY = key;
 }
 
-beforeEach(() => {
+function clearEnv() {
   delete process.env.ENABLE_BANKING_APPLICATION_ID;
   delete process.env.ENABLE_BANKING_PRIVATE_KEY;
+  delete process.env.ENABLE_BANKING_PRIVATE_KEY_FILE;
   delete process.env.ENABLE_BANKING_API_BASE;
-});
+  // The key is memoised, so a case that did not reset it would be handed the previous one.
+  resetKeyCache();
+}
 
-afterEach(() => {
-  delete process.env.ENABLE_BANKING_APPLICATION_ID;
-  delete process.env.ENABLE_BANKING_PRIVATE_KEY;
-  delete process.env.ENABLE_BANKING_API_BASE;
-});
+beforeEach(clearEnv);
+afterEach(clearEnv);
 
 describe("configuration", () => {
   it("is unconfigured until both the application id and the key are present", () => {
@@ -109,6 +114,88 @@ describe("institution ids", () => {
   it("rejects an id that is not in the expected form", () => {
     expect(() => decodeInstitutionId("BancoBPI")).toThrow();
     expect(() => decodeInstitutionId(":no-country")).toThrow();
+  });
+});
+
+describe("reading the key from a file", () => {
+  let dir: string;
+  let keyPath: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(path.join(tmpdir(), "situs-eb-key-"));
+    keyPath = path.join(dir, "app.pem");
+    writeFileSync(keyPath, privateKey, { mode: 0o400 });
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("signs with a key mounted as a file", () => {
+    // The documented route for a real deployment: an RSA-2048 PEM is ~1,700 characters and does
+    // not fit in a TrueNAS app-config value, and an env var holding a private key is readable
+    // from /proc/<pid>/environ besides.
+    process.env.ENABLE_BANKING_APPLICATION_ID = APP_ID;
+    process.env.ENABLE_BANKING_PRIVATE_KEY_FILE = keyPath;
+
+    expect(isEnableBankingConfigured()).toBe(true);
+
+    const [header, payload, signature] = buildAuthJwt().split(".");
+    const ok = crypto
+      .createVerify("RSA-SHA256")
+      .update(`${header}.${payload}`)
+      .verify(publicKey, Buffer.from(signature, "base64url"));
+    expect(ok).toBe(true);
+  });
+
+  it("prefers the file over an inline value when both are set", () => {
+    // Otherwise a leftover inline variable would quietly win over the file someone just mounted,
+    // and the symptom would be an unexplained 401 from the far end.
+    const { privateKey: otherKey } = crypto.generateKeyPairSync("rsa", {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: "spki", format: "pem" },
+      privateKeyEncoding: { type: "pkcs8", format: "pem" },
+    });
+    process.env.ENABLE_BANKING_APPLICATION_ID = APP_ID;
+    process.env.ENABLE_BANKING_PRIVATE_KEY = otherKey;
+    process.env.ENABLE_BANKING_PRIVATE_KEY_FILE = keyPath;
+
+    const [header, payload, signature] = buildAuthJwt().split(".");
+    // Verifies against the FILE's public half, so the file is demonstrably the one that signed.
+    const ok = crypto
+      .createVerify("RSA-SHA256")
+      .update(`${header}.${payload}`)
+      .verify(publicKey, Buffer.from(signature, "base64url"));
+    expect(ok).toBe(true);
+  });
+
+  it("reports an unreadable path as a configuration error naming the path", () => {
+    // Not "unconfigured". A misconfigured instance that looks identical to a deliberately
+    // CSV-only one is the failure this whole session keeps running into.
+    process.env.ENABLE_BANKING_APPLICATION_ID = APP_ID;
+    process.env.ENABLE_BANKING_PRIVATE_KEY_FILE = path.join(dir, "does-not-exist.pem");
+
+    expect(() => isEnableBankingConfigured()).toThrow(EnableBankingConfigError);
+    expect(() => isEnableBankingConfigured()).toThrow(/does-not-exist\.pem/);
+  });
+
+  it("rejects an empty key file rather than reporting it configured", () => {
+    process.env.ENABLE_BANKING_APPLICATION_ID = APP_ID;
+    const empty = path.join(dir, "empty.pem");
+    writeFileSync(empty, "   \n");
+    process.env.ENABLE_BANKING_PRIVATE_KEY_FILE = empty;
+
+    expect(() => isEnableBankingConfigured()).toThrow(/empty/i);
+  });
+
+  it("explains a key whose newlines were lost, rather than passing OpenSSL's wording on", () => {
+    // `error:1E08010C:DECODER routines::unsupported` is what a PEM pasted into a single-line
+    // field looks like, and it tells someone who has not seen it before nothing at all.
+    process.env.ENABLE_BANKING_APPLICATION_ID = APP_ID;
+    process.env.ENABLE_BANKING_PRIVATE_KEY = privateKey.replace(/\n/g, " ");
+
+    expect(() => buildAuthJwt()).toThrow(EnableBankingConfigError);
+    expect(() => buildAuthJwt()).toThrow(/newlines were probably lost/i);
   });
 });
 
