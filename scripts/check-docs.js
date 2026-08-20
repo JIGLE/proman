@@ -76,6 +76,18 @@ const RETIRED_CLAIMS = [
       "to create credentials there sends them somewhere they cannot sign up",
   },
   {
+    // Same shape as the base64 entry below: the correction has to name Sandbox in order to warn
+    // against it, so this matches the recommendation — sandbox offered as the thing to begin with
+    // — and the allowlist carries the warning's own phrasing.
+    pattern: /start with a sandbox|sandbox (application |app )?first|begin with a sandbox/i,
+    retired: "2026-08-20",
+    because:
+      "Enable Banking's sandbox holds a handful of Nordic mock banks and the connect picker " +
+      "offers only PT and ES, so a sandbox application can never populate it — the advice led " +
+      "to an empty picker with no way forward. Register a Production application in restricted " +
+      "mode instead",
+  },
+  {
     // Targets the RECOMMENDATION, not the word. The correction has to be able to say "base64"
     // in order to warn against it, so the pattern requires the shape the advice took — base64
     // offered as the way to get a key into a config field — and CLAIM_ALLOWLIST carries the
@@ -99,7 +111,9 @@ const CLAIM_ALLOWLIST = [
   /previously read/i,
   /never existed/i,
   /Do not "correct"/i,
-  /Do not base64/i, // the warning has to name what it warns against
+  /Not a Sandbox one/i, // the warning has to name what it warns against
+  /cannot exercise this app|can never populate/i,
+  /Do not base64/i,
   /no encoding fits/i,
   /makes it (worse|~?2,272)/i,
   /RETIRED_CLAIMS/, // this file

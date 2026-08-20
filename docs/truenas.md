@@ -110,17 +110,23 @@ licence — so this instance needs no PSD2 licence and no eIDAS certificate of i
 **restricted production** mode is free and limited to accounts you whitelist as yours, which is
 exactly the self-hosted case; their paid tiers are for products aggregating other people's accounts.
 
-1. Register an application in their Control Panel. **Start with a Sandbox one** — it activates
-   automatically and connects to bank sandboxes, so the whole flow can be exercised before any real
-   account is involved. Create a Production application afterwards.
+1. Register a **Production** application in their Control Panel, and whitelist your own accounts
+   to activate restricted mode.
+
+   > **Not a Sandbox one, despite the temptation.** A sandbox application activates instantly,
+   > which makes it look like the obvious first step — this guide recommended it until someone
+   > followed the advice. Enable Banking's sandbox contains a handful of Nordic mock banks, and
+   > the connect picker offers only Portugal and Spain, so the list comes back empty and there is
+   > no way forward from there. Sandbox is useful for exercising the API from a script; it cannot
+   > exercise this app's flow.
+
 2. Save the RSA private key it generates. You are offered it once.
 3. Add this exact URL to the application's allowed redirect URLs:
    `https://<your-host>/api/bank/connections/callback`. It must match `NEXTAUTH_URL`, because
    Enable Banking validates the redirect against that list rather than accepting whatever is sent.
-4. For a Production application, whitelist your own accounts to activate restricted mode.
-5. Set `ENABLE_BANKING_APPLICATION_ID`, and give the app the key **as a file** (see below), then
+4. Set `ENABLE_BANKING_APPLICATION_ID`, and give the app the key **as a file** (see below), then
    restart.
-6. Settings › Integrations → **Connect a bank**. You authorise at your own bank; Situs never sees
+5. Settings › Integrations → **Connect a bank**. You authorise at your own bank; Situs never sees
    your banking password.
 
 ### The private key goes in a file, not an environment variable
@@ -138,7 +144,21 @@ UI has a shell built in.
 
 #### 1. Put the key on the NAS
 
-**System Settings → Shell** in the TrueNAS web UI. Create the folder:
+**System Settings → Shell** in the TrueNAS web UI. Become root first — the app datasets are
+root-owned, so `truenas_admin` gets "permission denied" on every step below without this:
+
+```bash
+sudo -i
+```
+
+> **Do not reach for `sudo cat > file` instead.** It fails with the same "permission denied", and
+> confusingly so: the `>` redirect is performed by your own shell _before_ `sudo` runs, so the file
+> is still created as `truenas_admin` — `sudo` only elevates `cat`, which is not the part that
+> needs it. If you would rather not hold a root shell, the working form is
+> `sudo tee <path> > /dev/null`, which takes the same paste on stdin. `sudo -i` is simpler here,
+> because the `chown`, `chmod` and `ls` steps all need root too. Type `exit` when you are done.
+
+Now create the folder:
 
 ```bash
 mkdir -p /mnt/POOL/situs/secrets
@@ -172,7 +192,17 @@ chmod 400 /mnt/POOL/situs/secrets/app.pem
 ls -l /mnt/POOL/situs/secrets/app.pem
 ```
 
-Expect `-r-------- 1 1001 1001`. The **numbers** are what matter, not a name: the container runs as
+Then check the whole path, not only the file. Every parent directory has to be traversable by uid
+1001 as well, and one that is not presents exactly like a wrong path:
+
+```bash
+namei -l /mnt/POOL/situs/secrets/app.pem
+```
+
+Every line needs an `x` for others. If one shows `drwx------` and root ownership, `chmod o+x` that
+directory.
+
+Expect `-r-------- 1 1001 1001` from `ls`. The **numbers** are what matter, not a name: the container runs as
 uid/gid 1001, and TrueNAS may show a different (or no) username for that id on the host side. If
 `ls` prints a name instead of `1001`, that is fine as long as `chown` reported no error.
 
@@ -242,13 +272,15 @@ your banking password.
 
 #### If something is wrong
 
-| What you see                                      | What it means                                                                            |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| The bank section fails to load, or shows an error | The path is wrong or unreadable. **Apps → the app → Logs**: the message names the path.  |
-| "Bank connection not configured" persists         | A variable is unset or misspelled, or the app did not restart.                           |
-| `DECODER routines::unsupported`                   | The PEM lost its line breaks. Redo step 1 and check `wc -l`.                             |
-| 401 from Enable Banking                           | A leftover `ENABLE_BANKING_PRIVATE_KEY`, or the key does not belong to that application. |
-| The bank refuses the redirect                     | Step 7 — the registered URL does not match `NEXTAUTH_URL` exactly.                       |
+| What you see                                      | What it means                                                                                             |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| The bank section fails to load, or shows an error | The path is wrong or unreadable. **Apps → the app → Logs**: the message names the path.                   |
+| The file looks right but is still unreadable      | A parent directory is not traversable by uid 1001. `namei -l <path>` shows which one.                     |
+| The picker opens but lists no banks               | A Sandbox application, or a Production one whose accounts are not whitelisted yet. The picker says which. |
+| "Bank connection not configured" persists         | A variable is unset or misspelled, or the app did not restart.                                            |
+| `DECODER routines::unsupported`                   | The PEM lost its line breaks. Redo step 1 and check `wc -l`.                                              |
+| 401 from Enable Banking                           | A leftover `ENABLE_BANKING_PRIVATE_KEY`, or the key does not belong to that application.                  |
+| The bank refuses the redirect                     | Step 7 — the registered URL does not match `NEXTAUTH_URL` exactly.                                        |
 
 An unreadable path is treated as a **configuration error**, not as "no bank provider configured" —
 a misconfigured instance and a deliberately CSV-only one must not look the same. The message names
