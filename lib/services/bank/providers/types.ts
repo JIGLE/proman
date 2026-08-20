@@ -35,6 +35,24 @@ export interface Institution {
   maxHistoricalDays?: number;
 }
 
+/**
+ * The picker's answer, with the count it was filtered from.
+ *
+ * `totalAvailable` exists because an empty `institutions` has three causes with three different
+ * remedies, and they were indistinguishable: the provider returned banks but none in this country
+ * (wrong application type), the provider returned nothing at all (a sandbox application, or a
+ * production one not yet activated), or our own country filter matched nothing because the
+ * provider names the field differently. The UI said "no banks available for this country" for all
+ * three — a claim it could not actually support, and one that cost five exchanges to see past.
+ *
+ * Counted BEFORE the country filter, deliberately. After filtering it would only ever restate
+ * `institutions.length` and answer nothing.
+ */
+export interface InstitutionListing {
+  institutions: Institution[];
+  totalAvailable: number;
+}
+
 export interface ConsentRequest {
   institutionId: string;
   /** Absolute URL the bank returns the user to. Must be pre-registered with the provider. */
@@ -118,7 +136,7 @@ export interface BankDataProvider {
   dailyReadBudget: number;
 
   /** Banks available in a country, for the picker. */
-  listInstitutions(country: string): Promise<Institution[]>;
+  listInstitutions(country: string): Promise<InstitutionListing>;
 
   /** Begin consent. Returns the URL to send the user to. */
   createConsentLink(request: ConsentRequest): Promise<ConsentLink>;

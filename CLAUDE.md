@@ -242,8 +242,12 @@ Required in production: `PII_ENCRYPTION_KEY` (64-char hex; the app exits without
 Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`
 
 Optional (live bank connection — PSD2 account information via Enable Banking):
-`ENABLE_BANKING_APPLICATION_ID`, `ENABLE_BANKING_PRIVATE_KEY` (PEM, or base64 where an env field
-mangles multi-line values). Absent, the app is CSV-import-only and renders no connect button.
+`ENABLE_BANKING_APPLICATION_ID`, plus the RSA key — `ENABLE_BANKING_PRIVATE_KEY_FILE` pointing at a
+mounted `.pem` for any real deployment, or `ENABLE_BANKING_PRIVATE_KEY` inline for a local run. The
+file wins when both are set. **Do not base64 the key to fit a config field**: a PEM is ~1,700 chars
+and base64 makes it ~2,272, against TrueNAS' 1,000-char cap, so no encoding fits — mounting is the
+only route, and it keeps the key out of `/proc/<pid>/environ` besides. Absent, the app is
+CSV-import-only and renders no connect button.
 `CRON_SECRET` gates all three `/api/cron/*` endpoints (notifications, data retention, bank sync);
 each returns 503 while it is unset, so nothing runs on a schedule until it is set.
 

@@ -54,8 +54,11 @@ async function handleGet(request: NextRequest): Promise<Response> {
     return createErrorResponse(new Error("Bank provider unavailable"), 503, request);
   }
 
-  const institutions = await provider.listInstitutions(country.toUpperCase());
-  return createSuccessResponse({ providerKey, institutions });
+  // `totalAvailable` is what the application can reach before the country filter. The picker
+  // needs it to tell "this provider has banks, none of them here" from "this provider has no
+  // banks at all" — see InstitutionListing in providers/types.ts for why that mattered.
+  const { institutions, totalAvailable } = await provider.listInstitutions(country.toUpperCase());
+  return createSuccessResponse({ providerKey, institutions, totalAvailable });
 }
 
 export const GET = withErrorHandler(withRateLimit(handleGet));

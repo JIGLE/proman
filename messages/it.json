@@ -235,6 +235,8 @@
       "bankPickerHelp": "Verrai indirizzato alla tua banca per autorizzare l'accesso in sola lettura al tuo conto. Situs non vede mai la tua password bancaria.",
       "bankCountryLabel": "Paese",
       "bankNoInstitutions": "Nessuna banca disponibile per questo paese.",
+      "bankNoInstitutionsAtAll": "Questa applicazione non riesce a raggiungere alcuna banca. Di solito significa un'applicazione Sandbox (le sue banche di prova sono nordiche, quindi nessuna appare qui) o una di Produzione i cui conti non sono ancora stati autorizzati.",
+      "bankNoInstitutionsHere": "{count} banche raggiungibili, ma nessuna in {country}. L'applicazione è registrata per altri paesi.",
       "bankInstitutionsFailed": "Impossibile caricare l'elenco delle banche. Riprova tra poco.",
       "bankConnected": "Banca collegata. I movimenti compariranno in Finanze man mano che arrivano.",
       "bankConnectFailed": "Il collegamento non è stato completato. Ricomincia dalla tua banca.",
@@ -259,7 +261,7 @@
         "ES": "Spagna"
       },
       "bankNoProviderTitle": "Connessione bancaria non configurata",
-      "bankNoProviderBody": "Questa istanza non ha credenziali Enable Banking, quindi i movimenti non possono essere importati automaticamente. Imposta ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY e riavvia.",
+      "bankNoProviderBody": "Questa istanza non ha credenziali Enable Banking, quindi i movimenti non possono essere importati automaticamente. Imposta ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY_FILE che punta al .pem montato, poi riavvia.",
       "bankNoProviderCsv": "Nel frattempo l'importazione CSV funziona, in Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti si comportano allo stesso modo."
     }
   },

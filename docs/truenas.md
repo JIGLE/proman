@@ -110,17 +110,23 @@ licence — so this instance needs no PSD2 licence and no eIDAS certificate of i
 **restricted production** mode is free and limited to accounts you whitelist as yours, which is
 exactly the self-hosted case; their paid tiers are for products aggregating other people's accounts.
 
-1. Register an application in their Control Panel. **Start with a Sandbox one** — it activates
-   automatically and connects to bank sandboxes, so the whole flow can be exercised before any real
-   account is involved. Create a Production application afterwards.
+1. Register a **Production** application in their Control Panel, and whitelist your own accounts
+   to activate restricted mode.
+
+   > **Not a Sandbox one, despite the temptation.** A sandbox application activates instantly,
+   > which makes it look like the obvious first step — this guide recommended it until someone
+   > followed the advice. Enable Banking's sandbox contains a handful of Nordic mock banks, and
+   > the connect picker offers only Portugal and Spain, so the list comes back empty and there is
+   > no way forward from there. Sandbox is useful for exercising the API from a script; it cannot
+   > exercise this app's flow.
+
 2. Save the RSA private key it generates. You are offered it once.
 3. Add this exact URL to the application's allowed redirect URLs:
    `https://<your-host>/api/bank/connections/callback`. It must match `NEXTAUTH_URL`, because
    Enable Banking validates the redirect against that list rather than accepting whatever is sent.
-4. For a Production application, whitelist your own accounts to activate restricted mode.
-5. Set `ENABLE_BANKING_APPLICATION_ID`, and give the app the key **as a file** (see below), then
+4. Set `ENABLE_BANKING_APPLICATION_ID`, and give the app the key **as a file** (see below), then
    restart.
-6. Settings › Integrations → **Connect a bank**. You authorise at your own bank; Situs never sees
+5. Settings › Integrations → **Connect a bank**. You authorise at your own bank; Situs never sees
    your banking password.
 
 ### The private key goes in a file, not an environment variable
@@ -131,24 +137,160 @@ what you would want anyway: an environment variable holding a private key is rea
 `/proc/<pid>/environ`, shows up in process listings and crash dumps, and is echoed by any diagnostic
 that prints the environment. A file with `0400` is none of those.
 
-1. Put the `.pem` somewhere on the host the app can reach, e.g. `/mnt/tank/situs/secrets/app.pem`,
-   owned by the app's user and `chmod 400`.
-2. In the custom app's **Storage** section add a host-path volume, **read-only**:
-   host `/mnt/tank/situs/secrets` → container `/app/secrets`.
-3. Set `ENABLE_BANKING_PRIVATE_KEY_FILE=/app/secrets/app.pem`.
+The walkthrough below is for **TrueNAS 24.10 and newer** (Electric Eel, Fangtooth, Goldeye), where
+apps run on Docker. Substitute your own pool name wherever you see `POOL` — everything else is
+literal and can be copied as-is. Nothing here needs a terminal on your own machine; the TrueNAS web
+UI has a shell built in.
 
-Leave `ENABLE_BANKING_PRIVATE_KEY` unset. If both are set the file wins, but a leftover inline value
-is exactly the sort of thing that later produces an unexplained 401.
+#### 1. Put the key on the NAS
 
-If the path cannot be read, the app says so and names the path rather than quietly reporting "no
-bank provider configured" — a misconfigured instance and a deliberately CSV-only one must not look
-the same. And if you ever see `DECODER routines::unsupported`, that is a PEM whose newlines were
-lost on the way into a single-line field; the file route avoids it entirely.
+**System Settings → Shell** in the TrueNAS web UI. Become root first — the app datasets are
+root-owned, so `truenas_admin` gets "permission denied" on every step below without this:
+
+```bash
+sudo -i
+```
+
+> **Do not reach for `sudo cat > file` instead.** It fails with the same "permission denied", and
+> confusingly so: the `>` redirect is performed by your own shell _before_ `sudo` runs, so the file
+> is still created as `truenas_admin` — `sudo` only elevates `cat`, which is not the part that
+> needs it. If you would rather not hold a root shell, the working form is
+> `sudo tee <path> > /dev/null`, which takes the same paste on stdin. `sudo -i` is simpler here,
+> because the `chown`, `chmod` and `ls` steps all need root too. Type `exit` when you are done.
+
+Now create the folder:
+
+```bash
+mkdir -p /mnt/POOL/situs/secrets
+```
+
+Then start writing the file, paste the key, and finish with **Enter** followed by **Ctrl+D**:
+
+```bash
+cat > /mnt/POOL/situs/secrets/app.pem
+```
+
+Paste the entire `.pem`, including the `-----BEGIN` and `-----END` marker lines at the top and
+bottom of it. Open it in Notepad or TextEdit first if you need to; it is a text file.
+
+Check the paste survived, because this is where it usually goes wrong:
+
+```bash
+head -1 /mnt/POOL/situs/secrets/app.pem
+wc -l /mnt/POOL/situs/secrets/app.pem
+```
+
+The first command must print a line beginning `-----BEGIN`. The second must print more than one
+line — around 28 for a 2048-bit key. **A count of 1 means the line breaks were lost in the paste**,
+which produces `DECODER routines::unsupported` later; delete the file and paste again.
+
+#### 2. Make it readable by the app, and by nothing else
+
+```bash
+chown 1001:1001 /mnt/POOL/situs/secrets/app.pem
+chmod 400 /mnt/POOL/situs/secrets/app.pem
+ls -l /mnt/POOL/situs/secrets/app.pem
+```
+
+Then check the whole path, not only the file. Every parent directory has to be traversable by uid
+1001 as well, and one that is not presents exactly like a wrong path:
+
+```bash
+namei -l /mnt/POOL/situs/secrets/app.pem
+```
+
+Every line needs an `x` for others. If one shows `drwx------` and root ownership, `chmod o+x` that
+directory.
+
+Expect `-r-------- 1 1001 1001` from `ls`. The **numbers** are what matter, not a name: the container runs as
+uid/gid 1001, and TrueNAS may show a different (or no) username for that id on the host side. If
+`ls` prints a name instead of `1001`, that is fine as long as `chown` reported no error.
+
+> If your pool uses NFSv4 ACLs, `ls -l` may show a trailing `+` and `chmod` may not stick. Check
+> with `getfacl`, and prefer a plain directory under an existing dataset over creating a new
+> dataset with a share preset.
+
+#### 3. Mount the folder into the app
+
+**Apps → your Situs app → Edit → Storage → Add**, then:
+
+| Field      | Value                     |
+| ---------- | ------------------------- |
+| Type       | **Host Path**             |
+| Host Path  | `/mnt/POOL/situs/secrets` |
+| Mount Path | `/app/secrets`            |
+| Read Only  | **on**                    |
+
+Mount the **folder**, not the file — mounting a single file works less reliably across Docker
+versions, and the folder costs nothing. The exact field labels move slightly between point releases
+(you may see "Host Path Volumes", or a separate "Mount Path"/"Container Path" wording); look for the
+pair that asks where it is _on the NAS_ and where it should appear _inside the app_.
+
+#### 4. Set the two variables
+
+In the same edit form, under environment variables:
+
+| Name                              | Value                                     |
+| --------------------------------- | ----------------------------------------- |
+| `ENABLE_BANKING_APPLICATION_ID`   | the application id from the Control Panel |
+| `ENABLE_BANKING_PRIVATE_KEY_FILE` | `/app/secrets/app.pem`                    |
+
+**Delete `ENABLE_BANKING_PRIVATE_KEY` if it is still there.** The file wins when both are set, so
+nothing breaks immediately — which is the problem: a stale inline value sits there until it
+surfaces as an unexplained 401 weeks later.
+
+#### 5. Save
+
+Saving redeploys the app, so no separate restart is needed this time.
+
+Later, if you ever replace the _contents_ of `app.pem` at the same path, **restart the app by hand**.
+The key is read once and cached for the life of the process, so the old one keeps being used until
+something restarts it.
+
+#### 6. Check that it worked
+
+Open **Settings › Integrations** in Situs:
+
+- a **Connect a bank** button — the key was found and read. Done.
+- a box headed **"Bank connection not configured"** — the app did not get both values. A variable is
+  unset or misspelled, or the app has not restarted.
+
+**`/admin` is not the check here.** It will still say _"Manual / CSV import only — no bank is
+connected on this account"_, and that is correct: it reports which banks you have connected, not
+whether credentials are present. It only changes after you complete step 7 and connect one.
+
+#### 7. Register the redirect URL, then connect
+
+Back in Enable Banking's Control Panel, the application's allowed redirect URLs must contain your
+`NEXTAUTH_URL` followed by `/api/bank/connections/callback` — for example
+`https://situs.example.org/api/bank/connections/callback`. It is compared exactly, and a mismatch is
+refused at their end after you have already authenticated at your bank, which is a confusing place
+to discover it.
+
+Then **Settings › Integrations → Connect a bank**. You authorise at your own bank; Situs never sees
+your banking password.
+
+#### If something is wrong
+
+| What you see                                      | What it means                                                                                             |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| The bank section fails to load, or shows an error | The path is wrong or unreadable. **Apps → the app → Logs**: the message names the path.                   |
+| The file looks right but is still unreadable      | A parent directory is not traversable by uid 1001. `namei -l <path>` shows which one.                     |
+| The picker opens but lists no banks               | A Sandbox application, or a Production one whose accounts are not whitelisted yet. The picker says which. |
+| "Bank connection not configured" persists         | A variable is unset or misspelled, or the app did not restart.                                            |
+| `DECODER routines::unsupported`                   | The PEM lost its line breaks. Redo step 1 and check `wc -l`.                                              |
+| 401 from Enable Banking                           | A leftover `ENABLE_BANKING_PRIVATE_KEY`, or the key does not belong to that application.                  |
+| The bank refuses the redirect                     | Step 7 — the registered URL does not match `NEXTAUTH_URL` exactly.                                        |
+
+An unreadable path is treated as a **configuration error**, not as "no bank provider configured" —
+a misconfigured instance and a deliberately CSV-only one must not look the same. The message names
+the path but not the key, and it reaches the container log rather than the browser, because error
+detail is deliberately not returned to clients.
 
 To confirm the credentials and record what the API actually returns:
 
 ```bash
-ENABLE_BANKING_APPLICATION_ID=… ENABLE_BANKING_PRIVATE_KEY="$(cat <app-id>.pem)" \
+ENABLE_BANKING_APPLICATION_ID=… ENABLE_BANKING_PRIVATE_KEY_FILE=/app/secrets/app.pem \
   node scripts/enablebanking-check.mjs --country PT
 ```
 

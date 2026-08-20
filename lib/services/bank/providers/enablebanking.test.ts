@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import crypto from "crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,6 +9,7 @@ import {
   resetKeyCache,
   buildAuthJwt,
   decodeInstitutionId,
+  enableBankingProvider,
   encodeInstitutionId,
   isEnableBankingConfigured,
   mapTransaction,
@@ -196,6 +197,100 @@ describe("reading the key from a file", () => {
 
     expect(() => buildAuthJwt()).toThrow(EnableBankingConfigError);
     expect(() => buildAuthJwt()).toThrow(/newlines were probably lost/i);
+  });
+});
+
+/**
+ * `listInstitutions` had NO coverage until an empty picker in production sent five messages
+ * back and forth to diagnose. The fixture below encodes the documented `{name, country}` shape
+ * — Enable Banking's own sample addresses an ASPSP that way (`ASPSP_NAME`/`ASPSP_COUNTRY`) and
+ * `pprint`s the /aspsps response without reading a field, so the RESPONSE shape is still an
+ * inference rather than a recording. Same standing as `mapTransaction`'s fixtures below, and
+ * replaced the same way: by `scripts/enablebanking-check.mjs` run against a real application.
+ */
+describe("listing institutions", () => {
+  const aspsps = [
+    { name: "Banco BPI", country: "PT" },
+    { name: "Caixa Geral de Depósitos", country: "PT", logo: "https://example.invalid/cgd.png" },
+    { name: "BBVA", country: "ES" },
+    { name: "Nordea", country: "FI" },
+    { name: "", country: "PT" },
+  ];
+
+  function respondWith(body: unknown, ok = true) {
+    return vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok,
+      status: ok ? 200 : 500,
+      text: async () => JSON.stringify(body),
+      json: async () => body,
+    } as Response);
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns only the requested country, and counts everything reachable", async () => {
+    configure();
+    respondWith({ aspsps });
+
+    const listing = await enableBankingProvider.listInstitutions("pt");
+
+    expect(listing.institutions.map((i) => i.name)).toEqual([
+      "Banco BPI",
+      "Caixa Geral de Depósitos",
+    ]);
+    // Counted BEFORE the filter. This is the whole point: 5 reachable, 2 here. Filtered, it
+    // would restate institutions.length and answer nothing.
+    expect(listing.totalAvailable).toBe(5);
+  });
+
+  it("reports zero reachable when the application can see nothing", async () => {
+    // A sandbox application with no ASPSPs, or a production one not yet activated. The UI shows
+    // a different message for this than for "reachable, none here", because the remedy differs.
+    configure();
+    respondWith({ aspsps: [] });
+
+    const listing = await enableBankingProvider.listInstitutions("PT");
+    expect(listing.institutions).toEqual([]);
+    expect(listing.totalAvailable).toBe(0);
+  });
+
+  it("distinguishes reachable-but-elsewhere from reachable-nothing", async () => {
+    // The case that actually happened: a sandbox application whose banks are Nordic, asked for
+    // Portugal. Empty list, but NOT an empty provider — and saying "no banks in Portugal" points
+    // at the country, which was never the cause.
+    configure();
+    respondWith({ aspsps: [{ name: "Nordea", country: "FI" }] });
+
+    const listing = await enableBankingProvider.listInstitutions("PT");
+    expect(listing.institutions).toEqual([]);
+    expect(listing.totalAvailable).toBe(1);
+  });
+
+  it("drops a nameless ASPSP rather than offering a blank row", async () => {
+    configure();
+    respondWith({ aspsps });
+
+    const listing = await enableBankingProvider.listInstitutions("PT");
+    expect(listing.institutions.every((i) => i.name.length > 0)).toBe(true);
+  });
+
+  it("packs country and name into an id the consent flow can decode", async () => {
+    configure();
+    respondWith({ aspsps });
+
+    const [first] = (await enableBankingProvider.listInstitutions("PT")).institutions;
+    expect(decodeInstitutionId(first.id)).toEqual({ country: "PT", name: "Banco BPI" });
+    expect(first.logoUrl).toBeUndefined();
+  });
+
+  it("survives a response with no aspsps key at all", async () => {
+    configure();
+    respondWith({});
+
+    const listing = await enableBankingProvider.listInstitutions("PT");
+    expect(listing).toEqual({ institutions: [], totalAvailable: 0 });
   });
 });
 
