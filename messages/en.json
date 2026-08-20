@@ -258,9 +258,9 @@
         "PT": "Portugal",
         "ES": "Spain"
       },
-      "bankNoProviderTitle": "No bank connection available",
-      "bankNoProviderBody": "This build ships no bank data provider, so movements cannot be imported automatically yet.",
-      "bankNoProviderCsv": "Import a CSV statement from Finance › Bank Movements — matching, receipts and the rent ledger all work exactly the same on imported movements."
+      "bankNoProviderTitle": "Bank connection not configured",
+      "bankNoProviderBody": "This instance has no Enable Banking credentials, so movements cannot be imported automatically. Set ENABLE_BANKING_APPLICATION_ID and ENABLE_BANKING_PRIVATE_KEY, then restart.",
+      "bankNoProviderCsv": "CSV import works meanwhile, in Finance › Bank Movements — matching, receipts and the rent ledger behave exactly the same on imported movements."
     }
   },
   "gdpr": {

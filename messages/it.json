@@ -258,9 +258,9 @@
         "PT": "Portogallo",
         "ES": "Spagna"
       },
-      "bankNoProviderTitle": "Nessuna connessione bancaria disponibile",
-      "bankNoProviderBody": "Questa build non include alcun fornitore di dati bancari, quindi i movimenti non possono ancora essere importati automaticamente.",
-      "bankNoProviderCsv": "Importa un estratto conto CSV da Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti funzionano allo stesso modo sui movimenti importati."
+      "bankNoProviderTitle": "Connessione bancaria non configurata",
+      "bankNoProviderBody": "Questa istanza non ha credenziali Enable Banking, quindi i movimenti non possono essere importati automaticamente. Imposta ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY e riavvia.",
+      "bankNoProviderCsv": "Nel frattempo l'importazione CSV funziona, in Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti si comportano allo stesso modo."
     }
   },
   "gdpr": {

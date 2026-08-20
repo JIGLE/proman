@@ -1,4 +1,5 @@
 import type { BankDataProvider } from "./types";
+import { enableBankingProvider } from "./enablebanking";
 
 /**
  * Provider key → bank data provider.
@@ -11,16 +12,16 @@ import type { BankDataProvider } from "./types";
  * connection from the `manual` and `csv` rows the import pipeline find-or-creates, which matters
  * because those two must never be offered a sync button or counted as a live feed.
  *
- * **This map is deliberately empty.** The one adapter that shipped here spoke to GoCardless Bank
- * Account Data, which stopped accepting new signups in July 2025 — so it could only ever work for
- * an instance that already held credentials, and no new operator could obtain any. Shipping an
- * adapter nobody can use is worse than shipping none: it puts a connect button in the UI whose
- * only possible outcome is failure. CSV import is the working path until an adapter lands here.
+ * Registration is not configuration: an adapter listed here is still only OFFERED once it reports
+ * `isConfigured()`, so an instance with no credentials sees the CSV-only view rather than a connect
+ * button that can only fail.
  *
  * Everything downstream of this map — consent, sync, the budget, the encrypted IBAN at rest — is
  * provider-agnostic and covered by tests that use a fake provider rather than a vendor.
  */
-const PROVIDERS: Record<string, BankDataProvider> = {};
+const PROVIDERS: Record<string, BankDataProvider> = {
+  enablebanking: enableBankingProvider,
+};
 
 /** Prefix marking a connection as belonging to a real provider rather than manual/CSV import. */
 export const PSD2_PREFIX = "psd2_";

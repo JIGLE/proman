@@ -1,0 +1,412 @@
+/**
+ * Enable Banking — PSD2 account information (AIS).
+ *
+ * Chosen after GoCardless Bank Account Data closed to new signups in July 2025, leaving this repo
+ * shipping an adapter no new operator could obtain credentials for. Enable Banking is Finnish, is
+ * itself the licensed AISP, and documents a **restricted production** mode: free access limited to
+ * accounts you whitelist as your own. That is exactly a self-hosted landlord reading their own
+ * bank, so no licence, no eIDAS certificate and no subscription are involved on this path.
+ *
+ * AUTH IS NOT A TOKEN EXCHANGE. There is no shared secret and nothing to swap for a bearer token:
+ * every request carries a JWT this app signs itself with the RSA private key generated when the
+ * application was registered, `kid` set to the application id. Signing is a few microseconds, so
+ * this mints one per request rather than caching — a cache here would buy nothing and add an
+ * invalidation bug waiting to happen.
+ *
+ * Written against Enable Banking's own published sample
+ * (`enablebanking/enablebanking-api-samples`, `python_example/account_information.py`) rather than
+ * from memory. The one part NOT confirmed against a real response is `mapTransaction` — see the
+ * comment there, and `scripts/enablebanking-check.mjs`, which exists to replace that guess with a
+ * recording.
+ */
+
+import crypto from "crypto";
+
+import type { BankCsvRow } from "../csv";
+import type {
+  BankDataProvider,
+  ConsentLink,
+  ConsentRequest,
+  Institution,
+  ProviderAccount,
+} from "./types";
+import { ConsentExpiredError } from "./types";
+
+const DEFAULT_API_BASE = "https://api.enablebanking.com";
+
+/** Sandbox and production applications share this host; the environment is a property of the
+ * application you registered, not of the URL. So there is no base to switch between them. */
+function apiBase(): string {
+  const override = process.env.ENABLE_BANKING_API_BASE?.trim().replace(/\/+$/, "");
+  if (!override) return DEFAULT_API_BASE;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(override);
+  } catch {
+    throw new Error("ENABLE_BANKING_API_BASE is not a valid URL");
+  }
+  const loopback = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+  if (parsed.protocol !== "https:" && !loopback) {
+    // Requests to this host carry a JWT signed with the application's private key. A typo'd
+    // `http://` would put it on the wire in clear — a mistake rather than an attack, but a
+    // cheap one to make impossible.
+    throw new Error("ENABLE_BANKING_API_BASE must be https:// — signed requests are sent to it");
+  }
+  return override;
+}
+
+/**
+ * Requested consent lifetime. Enable Banking accepts an explicit `valid_until`, and banks clamp it
+ * downward; asking for 90 days gets whatever the ASPSP is willing to grant.
+ */
+const ACCESS_VALID_DAYS = 90;
+
+/**
+ * Reads allowed per connection per day.
+ *
+ * Enable Banking publishes no per-day figure equivalent to the four-a-day cap the previous
+ * provider's free tier imposed, and restricted production may carry limits of its own. Four is
+ * therefore a deliberately conservative guess rather than a documented number: under-syncing costs
+ * a delay, over-syncing can cost a day of rejections. Raise it once the real limit is known.
+ */
+const DAILY_READ_BUDGET = 4;
+
+interface EbAmount {
+  amount?: string;
+  currency?: string;
+}
+
+interface EbParty {
+  name?: string;
+}
+
+interface EbAccountRef {
+  iban?: string;
+}
+
+/** One transaction as Enable Banking returns it. Every field is optional — ASPSPs differ wildly. */
+export interface EnableBankingTransaction {
+  entry_reference?: string;
+  booking_date?: string;
+  value_date?: string;
+  transaction_amount?: EbAmount;
+  /** "CRDT" (money in) or "DBIT" (money out). */
+  credit_debit_indicator?: string;
+  creditor?: EbParty;
+  debtor?: EbParty;
+  creditor_account?: EbAccountRef;
+  debtor_account?: EbAccountRef;
+  remittance_information?: string[] | string;
+}
+
+interface EbSessionAccount {
+  uid?: string;
+  account_id?: { iban?: string };
+  currency?: string;
+  name?: string;
+  product?: string;
+}
+
+function credentials(): { applicationId: string; privateKey: string } | null {
+  const applicationId = process.env.ENABLE_BANKING_APPLICATION_ID?.trim();
+  const rawKey = process.env.ENABLE_BANKING_PRIVATE_KEY?.trim();
+  if (!applicationId || !rawKey) return null;
+
+  // The key is a multi-line PEM, which several deployment surfaces (TrueNAS' app config among
+  // them) handle badly in a single-line env field. Base64 is accepted as an escape hatch, and
+  // detected rather than configured: a PEM always announces itself.
+  const privateKey = rawKey.includes("-----BEGIN")
+    ? rawKey
+    : Buffer.from(rawKey, "base64").toString("utf8");
+
+  return { applicationId, privateKey };
+}
+
+/** Whether this instance is configured to offer Enable Banking connections. */
+export function isEnableBankingConfigured(): boolean {
+  return credentials() !== null;
+}
+
+function base64url(value: string | Buffer): string {
+  return Buffer.from(value).toString("base64url");
+}
+
+/**
+ * The `Authorization` JWT, signed with the application's own key.
+ *
+ * Exported for tests: the claim set is small and exact, and a wrong `aud` or a missing `kid` fails
+ * as an opaque 401 from the far end rather than as anything diagnosable.
+ */
+export function buildAuthJwt(now = new Date()): string {
+  const creds = credentials();
+  if (!creds) {
+    throw new Error(
+      "Enable Banking is not configured. Set ENABLE_BANKING_APPLICATION_ID and " +
+        "ENABLE_BANKING_PRIVATE_KEY.",
+    );
+  }
+
+  const iat = Math.floor(now.getTime() / 1000);
+  const header = base64url(JSON.stringify({ typ: "JWT", alg: "RS256", kid: creds.applicationId }));
+  const payload = base64url(
+    JSON.stringify({
+      iss: "enablebanking.com",
+      aud: "api.enablebanking.com",
+      iat,
+      exp: iat + 3600,
+    }),
+  );
+
+  const signature = crypto
+    .createSign("RSA-SHA256")
+    .update(`${header}.${payload}`)
+    .sign(creds.privateKey);
+
+  return `${header}.${payload}.${base64url(signature)}`;
+}
+
+async function apiCall<T>(path: string, init?: RequestInit): Promise<T> {
+  // Enable Banking's own host, not /api/*: it never passes through proxy.ts's CSRF check, and
+  // attaching our CSRF token would disclose it to an external host.
+  const response = await fetch(`${apiBase()}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Bearer ${buildAuthJwt()}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    // At a session or account path this is the shape a revoked consent takes. It is also what a
+    // bad key looks like — but the remedy the UI offers (reconnect) is harmless either way, and
+    // a wrong key is caught at setup rather than mid-sync.
+    throw new ConsentExpiredError();
+  }
+  if (response.status === 429) {
+    throw new Error(
+      "Enable Banking rate limit reached. Bank data providers cap how often each account may " +
+        "be read; try again later.",
+    );
+  }
+  if (!response.ok) {
+    // Deliberately no body echo: an auth failure can quote the request back.
+    throw new Error(`Enable Banking request failed (HTTP ${response.status})`);
+  }
+
+  return (await response.json()) as T;
+}
+
+/**
+ * An ASPSP is addressed by `{name, country}`, not by an opaque id, so the pair is packed into the
+ * `Institution.id` the picker round-trips. The separator is a colon because an ASPSP name may
+ * contain spaces and punctuation but not, in practice, a colon — and `ConsentRequest` carries no
+ * country field to pass it in separately.
+ */
+export function encodeInstitutionId(country: string, name: string): string {
+  return `${country.toUpperCase()}:${name}`;
+}
+
+export function decodeInstitutionId(id: string): { country: string; name: string } {
+  const separator = id.indexOf(":");
+  if (separator < 1) {
+    throw new Error("Institution id is not in the expected <COUNTRY>:<name> form");
+  }
+  return { country: id.slice(0, separator).toUpperCase(), name: id.slice(separator + 1) };
+}
+
+/**
+ * Map one Enable Banking transaction to the row the import pipeline consumes.
+ *
+ * Pure and exported so it can be tested against recorded payloads without any network. Most of the
+ * risk in this integration lives here — a sign error or a swapped counterparty silently mis-matches
+ * rent, which is worse than a visible failure because nobody goes looking.
+ *
+ * **The sign convention here is the one thing not yet confirmed against a real response.** Enable
+ * Banking documents `credit_debit_indicator` (CRDT/DBIT) alongside an unsigned `transaction_amount`,
+ * and some ASPSPs are reported to send a signed amount instead. Both are handled: an explicit
+ * indicator wins, and a signed amount is honoured when no indicator is present. Run
+ * `scripts/enablebanking-check.mjs` against a real account and replace the fixtures in the test
+ * with what it records.
+ */
+export function mapTransaction(tx: EnableBankingTransaction): BankCsvRow | null {
+  const rawAmount = tx.transaction_amount?.amount;
+  const parsed = rawAmount === undefined ? NaN : Number(rawAmount);
+  const bookingDate = tx.booking_date ?? tx.value_date;
+
+  // Without an amount or a date there is nothing to match on, and a fingerprint built from
+  // undefined would collide with every other broken row.
+  if (!Number.isFinite(parsed) || !bookingDate) return null;
+
+  const indicator = tx.credit_debit_indicator?.toUpperCase();
+  let amount: number;
+  if (indicator === "CRDT") {
+    amount = Math.abs(parsed);
+  } else if (indicator === "DBIT") {
+    amount = -Math.abs(parsed);
+  } else {
+    // No indicator: trust the sign the ASPSP sent rather than assuming a direction.
+    amount = parsed;
+  }
+
+  // Which party is the counterparty depends on direction: money IN comes from the debtor (the
+  // tenant), money OUT goes to the creditor. Banks frequently populate only one side, so each
+  // falls back to the other rather than dropping the name.
+  const incoming = amount > 0;
+  const counterpartyName = incoming
+    ? (tx.debtor?.name ?? tx.creditor?.name)
+    : (tx.creditor?.name ?? tx.debtor?.name);
+  const counterpartyIban = incoming
+    ? (tx.debtor_account?.iban ?? tx.creditor_account?.iban)
+    : (tx.creditor_account?.iban ?? tx.debtor_account?.iban);
+
+  const remittance = Array.isArray(tx.remittance_information)
+    ? tx.remittance_information.join(" ")
+    : tx.remittance_information;
+
+  return {
+    bookingDate,
+    valueDate: tx.value_date,
+    amount,
+    counterpartyName: counterpartyName || undefined,
+    counterpartyIban: counterpartyIban || undefined,
+    reference: remittance || undefined,
+  };
+}
+
+export const enableBankingProvider: BankDataProvider = {
+  key: "enablebanking",
+  displayName: "Enable Banking",
+  dailyReadBudget: DAILY_READ_BUDGET,
+  isConfigured: isEnableBankingConfigured,
+
+  async listInstitutions(country: string): Promise<Institution[]> {
+    const wanted = country.toUpperCase();
+    const body = await apiCall<{
+      aspsps?: {
+        name?: string;
+        country?: string;
+        logo?: string;
+        maximum_consent_validity?: number;
+      }[];
+    }>("/aspsps");
+
+    return (body.aspsps ?? [])
+      .filter((a) => a.name && (a.country ?? "").toUpperCase() === wanted)
+      .map((a) => ({
+        id: encodeInstitutionId(wanted, a.name as string),
+        name: a.name as string,
+        country: wanted,
+        logoUrl: a.logo,
+      }));
+  },
+
+  async createConsentLink(request: ConsentRequest): Promise<ConsentLink> {
+    const { country, name } = decodeInstitutionId(request.institutionId);
+    const days = request.accessValidForDays ?? ACCESS_VALID_DAYS;
+    const validUntil = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+    const body = await apiCall<{ url?: string }>("/auth", {
+      method: "POST",
+      body: JSON.stringify({
+        access: { valid_until: validUntil.toISOString() },
+        aspsp: { name, country },
+        // Our unguessable nonce. Enable Banking echoes it back on the redirect as `state`, which
+        // is what ties the returning consent to the account that started it.
+        state: request.reference,
+        // Must be one of the URLs registered for the application in their Control Panel; a
+        // mismatch is rejected there rather than silently redirecting somewhere else.
+        redirect_url: request.redirectUrl,
+        psu_type: "personal",
+      }),
+    });
+
+    if (!body.url) throw new Error("Enable Banking returned no authorisation URL");
+
+    // No id exists yet: the session — and its id — are created when the user comes back with a
+    // code. `ConsentLink.providerRef` is nullable precisely for this shape.
+    return { providerRef: null, url: body.url, expiresAt: validUntil };
+  },
+
+  async completeConsent({ callbackParams }): Promise<ProviderAccount[]> {
+    const code = callbackParams.code;
+    if (!code) {
+      // The user closed the bank's page, or the bank refused. Either way there is no session to
+      // create, and the remedy is to start again — which is what ConsentExpiredError means here.
+      throw new ConsentExpiredError("The bank did not authorise the connection. Try again.");
+    }
+
+    const session = await apiCall<{ session_id?: string; accounts?: EbSessionAccount[] }>(
+      "/sessions",
+      { method: "POST", body: JSON.stringify({ code }) },
+    );
+
+    const accounts = session.accounts ?? [];
+    if (accounts.length === 0) {
+      throw new ConsentExpiredError("The bank granted no accounts. Try connecting again.");
+    }
+
+    return Promise.all(
+      accounts
+        .filter((a): a is EbSessionAccount & { uid: string } => Boolean(a.uid))
+        .map(async (account) => {
+          const label = account.name || account.product || "Bank account";
+          if (account.account_id?.iban) {
+            return {
+              id: account.uid,
+              iban: account.account_id.iban,
+              currency: account.currency,
+              label,
+            };
+          }
+
+          // Some ASPSPs omit the identification from the session payload. Details are a separate
+          // call; losing them must not lose the account, because transactions — the thing we
+          // actually need — come from a different endpoint entirely.
+          try {
+            const details = await apiCall<{
+              account?: { account_id?: { iban?: string }; currency?: string; name?: string };
+            }>(`/accounts/${encodeURIComponent(account.uid)}/details`);
+            return {
+              id: account.uid,
+              iban: details.account?.account_id?.iban,
+              currency: details.account?.currency ?? account.currency,
+              label: details.account?.name || label,
+            };
+          } catch {
+            return { id: account.uid, currency: account.currency, label };
+          }
+        }),
+    );
+  },
+
+  async fetchTransactions(accountRef: string, since?: Date): Promise<BankCsvRow[]> {
+    const rows: BankCsvRow[] = [];
+    let continuationKey: string | undefined;
+
+    // Paging is not optional. Enable Banking returns a `continuation_key` whenever more remains,
+    // and stopping at the first page would silently truncate history — which on a first sync
+    // reads as "no movements" rather than as an error.
+    do {
+      const query = new URLSearchParams();
+      if (since) query.set("date_from", since.toISOString().slice(0, 10));
+      if (continuationKey) query.set("continuation_key", continuationKey);
+      const suffix = query.toString() ? `?${query}` : "";
+
+      const body = await apiCall<{
+        transactions?: EnableBankingTransaction[];
+        continuation_key?: string;
+      }>(`/accounts/${encodeURIComponent(accountRef)}/transactions${suffix}`);
+
+      for (const tx of body.transactions ?? []) {
+        const row = mapTransaction(tx);
+        if (row) rows.push(row);
+      }
+      continuationKey = body.continuation_key;
+    } while (continuationKey);
+
+    return rows;
+  },
+};

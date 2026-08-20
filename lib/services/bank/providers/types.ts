@@ -50,8 +50,15 @@ export interface ConsentRequest {
 }
 
 export interface ConsentLink {
-  /** The provider's own id for this consent, persisted as `BankConnection.consentId`. */
-  providerRef: string;
+  /**
+   * The provider's own id for this consent, persisted as `BankConnection.consentId`.
+   *
+   * Nullable because not every provider has one to give yet. Some mint the id when consent
+   * STARTS and hand it over here; others return only a URL and mint the id when the user comes
+   * back, in exchange for a code on the redirect. Requiring an id at this point would rule the
+   * second shape out.
+   */
+  providerRef: string | null;
   /** Where to send the user to authenticate with their bank. */
   url: string;
   /** When the consent lapses and the user must re-authorise. Null when the provider does not say. */
@@ -118,9 +125,22 @@ export interface BankDataProvider {
 
   /**
    * Finish consent and list the accounts it granted.
+   *
+   * Takes BOTH what we stored at consent-start and what the bank put on the redirect, because
+   * providers split the necessary information differently: one finishes from an id it gave us
+   * up front, another needs a single-use `code` that only exists on the callback. Handing over
+   * both, and letting the adapter take what it needs, is what stops the shape of one provider's
+   * flow from being baked into the service layer.
+   *
+   * `callbackParams` is every query parameter the redirect carried, unfiltered — the route does
+   * not get to decide which ones matter.
+   *
    * Throws `ConsentExpiredError` if the user abandoned or the bank refused.
    */
-  completeConsent(providerRef: string): Promise<ProviderAccount[]>;
+  completeConsent(input: {
+    providerRef: string | null;
+    callbackParams: Readonly<Record<string, string>>;
+  }): Promise<ProviderAccount[]>;
 
   /**
    * Transactions for one account, in the shape the import pipeline already consumes.

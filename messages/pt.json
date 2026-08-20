@@ -258,9 +258,9 @@
         "PT": "Portugal",
         "ES": "Espanha"
       },
-      "bankNoProviderTitle": "Sem ligação bancária disponível",
-      "bankNoProviderBody": "Esta versão não inclui nenhum fornecedor de dados bancários, por isso os movimentos ainda não podem ser importados automaticamente.",
-      "bankNoProviderCsv": "Importe um extrato CSV em Finanças › Movimentos Bancários — a correspondência, os recibos e o livro de rendas funcionam exatamente da mesma forma com movimentos importados."
+      "bankNoProviderTitle": "Ligação bancária não configurada",
+      "bankNoProviderBody": "Esta instância não tem credenciais Enable Banking, por isso os movimentos não podem ser importados automaticamente. Defina ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY e reinicie.",
+      "bankNoProviderCsv": "Entretanto a importação CSV funciona, em Finanças › Movimentos Bancários — a correspondência, os recibos e o livro de rendas comportam-se exatamente da mesma forma."
     }
   },
   "gdpr": {

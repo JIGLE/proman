@@ -195,10 +195,28 @@ describe("completing a consent", () => {
     expect(unknown).toBe(wrong);
   });
 
-  it("rejects a reference with no consent behind it", async () => {
+  it("lets a provider finish without a stored consent id", async () => {
+    // This used to reject a null `consentId` as "never reached the bank". That was true for a
+    // provider that mints its id when consent STARTS — and wrong for one that returns only a URL
+    // and mints the id in exchange for a code on the redirect, which is the shape Enable Banking
+    // uses. Whether the pieces are sufficient is the adapter's question, so it is asked there.
     prismaMock.bankConnection.findMany.mockResolvedValue([pending({ consentId: null })]);
 
-    await expect(completeConsent("user-1", REFERENCE)).rejects.toThrow(/never reached the bank/i);
+    await expect(completeConsent("user-1", REFERENCE)).resolves.toBe("conn-1");
+  });
+
+  it("hands the adapter both the stored ref and the callback's query", async () => {
+    // The route passes every redirect parameter through unfiltered, because which ones matter is
+    // the provider's business: one finishes from an id we already hold, another needs a
+    // single-use `code` that exists nowhere else.
+    prismaMock.bankConnection.findMany.mockResolvedValue([pending()]);
+
+    await completeConsent("user-1", REFERENCE, { code: "auth-code-1", state: REFERENCE });
+
+    expect(providerMock.completeConsent).toHaveBeenCalledWith({
+      providerRef: "req-1",
+      callbackParams: { code: "auth-code-1", state: REFERENCE },
+    });
   });
 
   it("encrypts the IBAN and keeps only a hash for matching", async () => {
