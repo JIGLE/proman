@@ -18,6 +18,7 @@ import type {
   ConsentLink,
   ConsentRequest,
   Institution,
+  InstitutionListing,
   ProviderAccount,
 } from "./types";
 
@@ -59,8 +60,13 @@ export function createFakeProvider(options: FakeProviderOptions = {}): FakeProvi
     fetchCalls,
     consentRequests,
 
-    async listInstitutions(country: string): Promise<Institution[]> {
-      return institutions.filter((i) => i.country === country.toUpperCase());
+    async listInstitutions(country: string): Promise<InstitutionListing> {
+      return {
+        institutions: institutions.filter((i) => i.country === country.toUpperCase()),
+        // The whole configured set, not the filtered one — the fake has to model the real
+        // provider's distinction or a test could not exercise the "reachable, none here" case.
+        totalAvailable: institutions.length,
+      };
     },
 
     async createConsentLink(request: ConsentRequest): Promise<ConsentLink> {

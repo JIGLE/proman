@@ -96,6 +96,8 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
   const [pickerOpen, setPickerOpen] = useState(false);
   const [country, setCountry] = useState<string>(COUNTRIES[0]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
+  // Null until a listing comes back, so "not asked yet" never renders as "reaches no banks".
+  const [totalAvailable, setTotalAvailable] = useState<number | null>(null);
   const [loadingBanks, setLoadingBanks] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,13 +124,19 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
       setLoadingBanks(true);
       setError(null);
       try {
-        const body = await apiFetch<{ data?: { institutions?: Institution[] } }>(
+        const body = await apiFetch<{
+          data?: { institutions?: Institution[]; totalAvailable?: number };
+        }>(
           `/api/bank/institutions?country=${encodeURIComponent(code)}` +
             `&provider=${encodeURIComponent(providersConfigured[0] ?? "")}`,
         );
         setInstitutions(body?.data?.institutions ?? []);
+        setTotalAvailable(body?.data?.totalAvailable ?? 0);
       } catch {
         setInstitutions([]);
+        // Back to "unknown", not zero. A failed request tells us nothing about what the provider
+        // can reach, and claiming it reaches nothing would be inventing a diagnosis.
+        setTotalAvailable(null);
         setError(t("bankInstitutionsFailed"));
       } finally {
         setLoadingBanks(false);
@@ -320,7 +328,18 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
             {loadingBanks ? (
               <p className="text-sm text-muted-foreground">{t("loading")}</p>
             ) : institutions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("bankNoInstitutions")}</p>
+              // Three different problems with three different remedies. They used to share one
+              // message that named the country, which is the one thing that was never the cause.
+              <p className="text-sm text-muted-foreground">
+                {totalAvailable === null
+                  ? t("bankNoInstitutions")
+                  : totalAvailable === 0
+                    ? t("bankNoInstitutionsAtAll")
+                    : t("bankNoInstitutionsHere", {
+                        count: totalAvailable,
+                        country: t(COUNTRY_LABEL_KEYS[country as keyof typeof COUNTRY_LABEL_KEYS]),
+                      })}
+              </p>
             ) : (
               <ul className="max-h-[60vh] space-y-1 overflow-y-auto">
                 {institutions.map((bank) => (

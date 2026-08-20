@@ -28,7 +28,7 @@ import type {
   BankDataProvider,
   ConsentLink,
   ConsentRequest,
-  Institution,
+  InstitutionListing,
   ProviderAccount,
 } from "./types";
 import { ConsentExpiredError } from "./types";
@@ -362,7 +362,7 @@ export const enableBankingProvider: BankDataProvider = {
   dailyReadBudget: DAILY_READ_BUDGET,
   isConfigured: isEnableBankingConfigured,
 
-  async listInstitutions(country: string): Promise<Institution[]> {
+  async listInstitutions(country: string): Promise<InstitutionListing> {
     const wanted = country.toUpperCase();
     const body = await apiCall<{
       aspsps?: {
@@ -373,14 +373,23 @@ export const enableBankingProvider: BankDataProvider = {
       }[];
     }>("/aspsps");
 
-    return (body.aspsps ?? [])
-      .filter((a) => a.name && (a.country ?? "").toUpperCase() === wanted)
-      .map((a) => ({
-        id: encodeInstitutionId(wanted, a.name as string),
-        name: a.name as string,
-        country: wanted,
-        logoUrl: a.logo,
-      }));
+    // Everything the application can reach, before the country filter. A sandbox application
+    // returns a handful of Nordic mock banks and a production one not yet activated returns
+    // nothing at all; both used to arrive here as an empty picker reading "no banks available in
+    // this country", which pointed at the country and away from the cause.
+    const all = body.aspsps ?? [];
+
+    return {
+      totalAvailable: all.length,
+      institutions: all
+        .filter((a) => a.name && (a.country ?? "").toUpperCase() === wanted)
+        .map((a) => ({
+          id: encodeInstitutionId(wanted, a.name as string),
+          name: a.name as string,
+          country: wanted,
+          logoUrl: a.logo,
+        })),
+    };
   },
 
   async createConsentLink(request: ConsentRequest): Promise<ConsentLink> {

@@ -235,6 +235,8 @@
       "bankPickerHelp": "Se le enviará a su banco para autorizar el acceso de solo lectura a su cuenta. Situs nunca ve su contraseña bancaria.",
       "bankCountryLabel": "País",
       "bankNoInstitutions": "No hay bancos disponibles para este país.",
+      "bankNoInstitutionsAtAll": "Esta aplicación no puede acceder a ningún banco. Normalmente significa una aplicación Sandbox (sus bancos de prueba son nórdicos, así que ninguno aparece aquí) o una de Producción cuyas cuentas aún no se han autorizado.",
+      "bankNoInstitutionsHere": "{count} bancos accesibles, pero ninguno en {country}. La aplicación está registrada para otros países.",
       "bankInstitutionsFailed": "No se pudo cargar la lista de bancos. Inténtelo de nuevo en unos momentos.",
       "bankConnected": "Banco conectado. Los movimientos aparecerán en Finanzas a medida que lleguen.",
       "bankConnectFailed": "Esa conexión no se completó. Vuelva a empezar desde su banco.",
