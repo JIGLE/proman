@@ -76,6 +76,18 @@ const RETIRED_CLAIMS = [
       "to create credentials there sends them somewhere they cannot sign up",
   },
   {
+    // Targets the RECOMMENDATION, not the word. The correction has to be able to say "base64"
+    // in order to warn against it, so the pattern requires the shape the advice took — base64
+    // offered as the way to get a key into a config field — and CLAIM_ALLOWLIST carries the
+    // three phrasings the warning uses.
+    pattern: /base64.{0,60}(env|config|app-config|truenas).{0,25}(field|value|variable)/i,
+    retired: "2026-08-20",
+    because:
+      "measured: a PEM is ~1,700 chars and base64 makes it ~2,272 against TrueNAS' 1,000-char " +
+      "cap, so base64 is strictly worse than the thing it was offered to fix; the key is mounted " +
+      "as a file via ENABLE_BANKING_PRIVATE_KEY_FILE instead",
+  },
+  {
     pattern: /connect a bank.{0,40}gocardless|gocardless.{0,40}connect a bank/i,
     retired: "2026-08-20",
     because: "the adapter was removed; the registry ships empty and CSV import is the path",
@@ -87,6 +99,9 @@ const CLAIM_ALLOWLIST = [
   /previously read/i,
   /never existed/i,
   /Do not "correct"/i,
+  /Do not base64/i, // the warning has to name what it warns against
+  /no encoding fits/i,
+  /makes it (worse|~?2,272)/i,
   /RETIRED_CLAIMS/, // this file
   /retired:/,
 ];
