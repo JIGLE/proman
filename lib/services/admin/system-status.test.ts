@@ -26,6 +26,8 @@ vi.mock("@/lib/services/database/database", () => ({ getPrismaClient: () => pris
 vi.mock("./schema-drift", () => ({ checkSchemaDrift: driftMock }));
 
 import { getSystemStatus, type StatusCheck, type StatusSeverity } from "./system-status";
+import { __registerProviderForTest } from "@/lib/services/bank/providers/registry";
+import { createFakeProvider } from "@/lib/services/bank/providers/fake-provider";
 
 const find = (checks: StatusCheck[], id: string) => checks.find((c) => c.id === id);
 
@@ -238,6 +240,99 @@ describe("the signed-in account resolves to a real user row", () => {
  * That was true when it was written and became false the moment a bank could be connected — the
  * exact failure the file's first rule exists to prevent. It has to read the state, not assert it.
  */
+
+/**
+ * The distinction this section exists for: an instance whose credentials work but which can reach
+ * no banks used to look exactly like one with no credentials at all — both reported "manual only"
+ * by `bankCheck`, which reads connections rather than capability. Diagnosing that in the field
+ * took five exchanges and a shell session.
+ *
+ * Uses the registry's own test fake rather than a bespoke mock, so the contract these assertions
+ * rely on is the same one real providers implement.
+ */
+describe("the bank provider check reports capability, not connections", () => {
+  const cleanups: (() => void)[] = [];
+
+  afterEach(() => {
+    while (cleanups.length) cleanups.pop()?.();
+    delete process.env.ENABLE_BANKING_APPLICATION_ID;
+    delete process.env.ENABLE_BANKING_PRIVATE_KEY;
+    delete process.env.ENABLE_BANKING_PRIVATE_KEY_FILE;
+  });
+
+  function register(provider: ReturnType<typeof createFakeProvider>) {
+    cleanups.push(__registerProviderForTest(provider));
+    return provider;
+  }
+
+  it("calls an instance with no credentials simulated, never a fault", async () => {
+    // CSV-only is a legitimate way to run this. Reporting it as a warning would train operators
+    // to ignore the row.
+    const { checks } = await getSystemStatus("user-1");
+    const check = find(checks, "bank_provider");
+    expect(check?.state).toBe("not_configured");
+    expect(check?.severity).toBe("simulated");
+  });
+
+  it("warns when the credentials work but no bank is offered", async () => {
+    // The state the reporting instance was actually in. Previously indistinguishable from
+    // "not configured", which is why it took a shell to find out.
+    register(createFakeProvider({ key: "empty", configured: true, institutions: [] }));
+    const { checks } = await getSystemStatus("user-1");
+    const check = find(checks, "bank_provider");
+    expect(check?.state).toBe("no_banks");
+    expect(check?.severity).toBe("warning");
+    expect(check?.remedy).toMatch(/production|whitelist/i);
+  });
+
+  it("reports ok with a count once banks are reachable", async () => {
+    register(
+      createFakeProvider({
+        key: "full",
+        configured: true,
+        institutions: [
+          { id: "PT:A", name: "A", country: "PT" },
+          { id: "ES:B", name: "B", country: "ES" },
+        ],
+      }),
+    );
+    const { checks } = await getSystemStatus("user-1");
+    const check = find(checks, "bank_provider");
+    expect(check?.state).toBe("reachable");
+    expect(check?.severity).toBe("ok");
+    // Counted before the country filter, so both show even though only one is Portuguese.
+    expect(check?.detail).toContain("2");
+  });
+
+  it("degrades rather than removing the row when the provider throws", async () => {
+    const provider = register(createFakeProvider({ key: "broken", configured: true }));
+    provider.listInstitutions = async () => {
+      throw new Error("connect ETIMEDOUT 10.0.0.1:443");
+    };
+
+    const { checks } = await getSystemStatus("user-1");
+    const check = find(checks, "bank_provider");
+    expect(check?.state).toBe("unreachable");
+    expect(check?.severity).toBe("warning");
+    // The message can quote the request back, so it must not reach the browser. Same rule as
+    // databaseCheck.
+    expect(JSON.stringify(check)).not.toContain("ETIMEDOUT");
+  });
+
+  it("surfaces a key path that will not open, naming the path and not the key", async () => {
+    // The one error whose message IS safe to show: EnableBankingConfigError names the path only,
+    // and it otherwise reaches the container log where nobody is looking.
+    process.env.ENABLE_BANKING_APPLICATION_ID = "app-1";
+    process.env.ENABLE_BANKING_PRIVATE_KEY_FILE = "/app/secrets/does-not-exist.pem";
+
+    const { checks } = await getSystemStatus("user-1");
+    const check = find(checks, "bank_provider");
+    expect(check?.state).toBe("misconfigured");
+    expect(check?.severity).toBe("error");
+    expect(check?.detail).toContain("does-not-exist.pem");
+  });
+});
+
 describe("the bank check reports what is actually connected", () => {
   // Registered for the cases that need a `psd2_*` row to RESOLVE. The registry ships empty, so
   // without this those rows would look like a connection to a provider that is not installed —
