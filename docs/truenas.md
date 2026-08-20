@@ -111,14 +111,18 @@ licence — so this instance needs no PSD2 licence and no eIDAS certificate of i
 exactly the self-hosted case; their paid tiers are for products aggregating other people's accounts.
 
 1. Register a **Production** application in their Control Panel, and whitelist your own accounts
-   to activate restricted mode.
+   to activate restricted mode. This is the one that connects a real bank.
 
-   > **Not a Sandbox one, despite the temptation.** A sandbox application activates instantly,
-   > which makes it look like the obvious first step — this guide recommended it until someone
-   > followed the advice. Enable Banking's sandbox contains a handful of Nordic mock banks, and
-   > the connect picker offers only Portugal and Spain, so the list comes back empty and there is
-   > no way forward from there. Sandbox is useful for exercising the API from a script; it cannot
-   > exercise this app's flow.
+   > **The two application types do different jobs, and the difference is not obvious.** A
+   > _Sandbox_ application activates instantly, which makes it look like the sensible first step —
+   > this guide said so until someone followed the advice and reached a dead end. Sandbox does not
+   > reach real banks at all: it reaches a **Mock ASPSP**, a synthetic bank whose accounts and
+   > transactions you define yourself under the Control Panel's _Mock ASPSP_ tab. Since the connect
+   > picker here offers only Portugal and Spain, a sandbox application leaves it empty.
+   >
+   > That makes sandbox useless for connecting your bank and genuinely useful for something else:
+   > it is the only safe way to exercise the transaction mapping, because you control exactly what
+   > the payload contains. See _Recording the transaction shape_ below.
 
 2. Save the RSA private key it generates. You are offered it once.
 3. Add this exact URL to the application's allowed redirect URLs:
@@ -297,6 +301,27 @@ ENABLE_BANKING_APPLICATION_ID=… ENABLE_BANKING_PRIVATE_KEY_FILE=/app/secrets/a
 It redacts IBANs, names, amounts and tokens before printing, so the output is safe to share. The
 transaction shape it records is the one part of the adapter not yet verified against a real
 response.
+
+### Recording the transaction shape
+
+`mapTransaction` in `lib/services/bank/providers/enablebanking.ts` decides whether a movement is
+money in or money out and which party is the counterparty. It was written from Enable Banking's API
+reference rather than from a recorded response, and it handles both sign conventions defensively
+because which one an ASPSP uses is not known. **Handled defensively is not verified**: a sign error
+there mis-matches rent silently instead of failing, which is worse than an outage because nobody
+goes looking.
+
+A Sandbox application is how to settle it without involving a real account:
+
+1. Control Panel → **Mock ASPSP** → add an account, or use the one already there.
+2. **Balances & Transactions** on that account → add at least one credit and one debit, with a
+   reference resembling a real rent transfer.
+3. Connect that mock bank from Settings › Integrations using the sandbox credentials.
+4. `node scripts/enablebanking-check.mjs --session <session_id>`.
+
+The output names the fields and their formats while redacting every value, so it is safe to paste
+into an issue. Replace the assumed fixtures in `enablebanking.test.ts` with what it records, and
+delete the comments marking them as assumptions.
 
 ### What this instance actually needs
 

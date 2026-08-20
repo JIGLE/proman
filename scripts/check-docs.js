@@ -82,10 +82,11 @@ const RETIRED_CLAIMS = [
     pattern: /start with a sandbox|sandbox (application |app )?first|begin with a sandbox/i,
     retired: "2026-08-20",
     because:
-      "Enable Banking's sandbox holds a handful of Nordic mock banks and the connect picker " +
-      "offers only PT and ES, so a sandbox application can never populate it — the advice led " +
-      "to an empty picker with no way forward. Register a Production application in restricted " +
-      "mode instead",
+      "a Sandbox application reaches only Enable Banking's Mock ASPSP — a synthetic bank whose " +
+      "accounts you define yourself — and the connect picker offers only PT and ES, so sandbox " +
+      "leaves it empty. Register a Production application in restricted mode to connect a real " +
+      "bank. (An earlier version of this entry said the sandbox holds Nordic banks. That was " +
+      "generalised from one sample file hardcoding Nordea/FI and was wrong about what sandbox is.)",
   },
   {
     // Targets the RECOMMENDATION, not the word. The correction has to be able to say "base64"
