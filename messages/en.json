@@ -235,8 +235,8 @@
       "bankPickerHelp": "You will be sent to your bank to authorise read-only access to your account. Situs never sees your banking password.",
       "bankCountryLabel": "Country",
       "bankNoInstitutions": "No banks are available for this country.",
-      "bankNoInstitutionsAtAll": "This application cannot reach any banks at all. That usually means a Sandbox application (its test banks are Nordic, so none appear here) or a Production one whose accounts have not been whitelisted yet.",
-      "bankNoInstitutionsHere": "{count} banks reachable, but none in {country}. The application is registered for other countries.",
+      "bankNoInstitutionsAtAll": "This application cannot reach any banks. Check in Enable Banking's Control Panel that it is a Production application and that your own accounts have been whitelisted — a newly registered application reaches nothing until then. A Sandbox application only ever reaches its own mock bank.",
+      "bankNoInstitutionsHere": "{count} banks reachable, none of them in {country}.",
       "bankInstitutionsFailed": "Could not load the list of banks. Try again shortly.",
       "bankConnected": "Bank connected. Movements will appear in Finance as they arrive.",
       "bankConnectFailed": "That connection did not complete. Start again from your bank.",
@@ -299,6 +299,7 @@
       "email": "Email (SendGrid)",
       "billing": "Subscription billing (Stripe)",
       "bank": "Bank movements",
+      "bank_provider": "Bank provider",
       "tax": "Tax authority — {country}"
     }
   },

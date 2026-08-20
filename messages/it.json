@@ -235,8 +235,8 @@
       "bankPickerHelp": "Verrai indirizzato alla tua banca per autorizzare l'accesso in sola lettura al tuo conto. Situs non vede mai la tua password bancaria.",
       "bankCountryLabel": "Paese",
       "bankNoInstitutions": "Nessuna banca disponibile per questo paese.",
-      "bankNoInstitutionsAtAll": "Questa applicazione non riesce a raggiungere alcuna banca. Di solito significa un'applicazione Sandbox (le sue banche di prova sono nordiche, quindi nessuna appare qui) o una di Produzione i cui conti non sono ancora stati autorizzati.",
-      "bankNoInstitutionsHere": "{count} banche raggiungibili, ma nessuna in {country}. L'applicazione è registrata per altri paesi.",
+      "bankNoInstitutionsAtAll": "Questa applicazione non riesce a raggiungere alcuna banca. Verifica nel pannello di Enable Banking che sia un'applicazione di Produzione e che i tuoi conti siano stati autorizzati — un'applicazione appena registrata non raggiunge nulla fino ad allora. Un'applicazione Sandbox raggiunge solo la propria banca simulata.",
+      "bankNoInstitutionsHere": "{count} banche raggiungibili, nessuna di esse in {country}.",
       "bankInstitutionsFailed": "Impossibile caricare l'elenco delle banche. Riprova tra poco.",
       "bankConnected": "Banca collegata. I movimenti compariranno in Finanze man mano che arrivano.",
       "bankConnectFailed": "Il collegamento non è stato completato. Ricomincia dalla tua banca.",
@@ -299,6 +299,7 @@
       "email": "Email (SendGrid)",
       "billing": "Fatturazione abbonamento (Stripe)",
       "bank": "Movimenti bancari",
+      "bank_provider": "Fornitore bancario",
       "tax": "Autorità fiscale — {country}"
     }
   },
