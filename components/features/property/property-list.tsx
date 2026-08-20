@@ -83,14 +83,20 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
 
-    // How far the tree split sits below the top of the scroll container. The asset rail is
-    // sized `100vh - this` so it runs to the viewport floor and no further — a plain `h-screen`
-    // would overhang by exactly the height of whatever page header sits above it, and a sticky
-    // element that overhangs its own containing block gets dragged upward until its top (and
-    // its action row) is off-screen. Measured on the wrapper, which never sticks, so the
-    // reading stays the layout position rather than the pinned one.
+    // The asset rail's height, measured rather than assumed. It must run to the scroll
+    // container's floor and no further; a sticky element that overhangs its own containing
+    // block gets dragged upward until its top — and its action row — is off-screen.
+    //
+    // This used to set `h-screen` and subtract the overhang from the MARGIN box instead. Layout
+    // was satisfied and the painted rail still ran past the floor, so Portfolio scrolled by a
+    // constant 108px however little it held. The audit harness measured it at
+    // `900px tall, +108px too low`. Sizing it `100vh - inset` would not have helped either:
+    // that also lands on the viewport floor, leaving the padded wrapper's bottom padding over.
+    //
+    // Measured on the wrapper, which never sticks, so the reading stays the layout position
+    // rather than the pinned one.
     const splitRef = useRef<HTMLDivElement>(null);
-    const [railInset, setRailInset] = useState<number | null>(null);
+    const [railHeight, setRailHeight] = useState<number | null>(null);
     useEffect(() => {
       const measure = () => {
         const el = splitRef.current;
@@ -98,7 +104,20 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         if (!el || !main) return;
         const top =
           el.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop;
-        setRailInset(Math.max(0, Math.round(top)));
+
+        // The scroll container's own padded child, whichever ancestor of the split it is. Its
+        // bottom padding is the last thing between the rail and the container floor, and it is
+        // responsive (p-4 / sm:p-6 / lg:p-8), so it is read rather than assumed.
+        let padded: HTMLElement = el;
+        while (padded.parentElement && padded.parentElement !== main) {
+          padded = padded.parentElement;
+        }
+        const bottomPad = parseFloat(getComputedStyle(padded).paddingBottom) || 0;
+
+        // Height from the CONTAINER, never the viewport. `main.clientHeight` already accounts
+        // for anything above it — a demo banner, the mobile top bar — which is exactly what a
+        // hardcoded 100vh cannot do.
+        setRailHeight(Math.max(240, Math.round(main.clientHeight - top - bottomPad)));
       };
       measure();
       window.addEventListener("resize", measure);
@@ -273,9 +292,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       lay out around it instead of under it. */}
                   <aside
                     style={
-                      railInset === null
+                      railHeight === null
                         ? undefined
-                        : ({ "--rail-inset": `${railInset}px` } as React.CSSProperties)
+                        : ({ "--rail-height": `${railHeight}px` } as React.CSSProperties)
                     }
                     className={cn(
                       "flex flex-col bg-[var(--color-surface)]",
@@ -283,11 +302,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       // sidebar's right edge; the overhang lands inside the shell's padding box,
                       // so it adds no horizontal overflow.
                       "lg:sticky lg:top-0 lg:-ml-8 lg:w-[calc(100%+2rem)]",
-                      // Painted a full viewport tall, but its *margin* box is shortened by the
-                      // inset — and the margin box is what sticky is allowed to move inside its
-                      // containing block. Without that, a rail as tall as the viewport has no
-                      // room to travel and gets dragged up until its action row is off-screen.
-                      "lg:h-screen lg:mb-[calc(-1*var(--rail-inset,7rem))]",
+                      // Real height, so the border box ends where the margin box does and the
+                      // container is never scrolled by a rail hanging past its floor. The
+                      // fallback only covers the first paint before the effect measures; it is
+                      // a calc off the viewport rather than a flat guess so it cannot jump far.
+                      "lg:h-[var(--rail-height,calc(100vh-9rem))]",
                       "lg:border-r lg:border-[var(--color-border)]",
                     )}
                   >
