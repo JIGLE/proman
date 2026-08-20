@@ -31,7 +31,12 @@
 import { getPrismaClient } from "@/lib/services/database/database";
 import { checkSchemaDrift } from "./schema-drift";
 import { registeredCountries, getTaxConnector } from "@/lib/tax/connectors/registry";
-import { getProviderForConnection, PSD2_PREFIX } from "@/lib/services/bank/providers/registry";
+import {
+  configuredProviders,
+  getBankProvider,
+  getProviderForConnection,
+  PSD2_PREFIX,
+} from "@/lib/services/bank/providers/registry";
 import { authorityName, modeKind } from "@/lib/tax/connectors/presentation";
 
 /**
@@ -292,6 +297,106 @@ async function bankCheck(userId: string): Promise<StatusCheck> {
   }
 }
 
+/**
+ * Whether this instance HAS a usable bank feed, as opposed to whether it is using one.
+ *
+ * Separate from `bankCheck` on purpose, and the separation is the point: that one reads
+ * `BankConnection` rows, so an instance with perfect credentials reaching zero banks looked
+ * identical to one with no credentials at all — both "manual only". Diagnosing exactly that
+ * situation took five exchanges and a shell, which is five more than a status page exists to cost.
+ *
+ * Four distinguishable states, because they have four different remedies:
+ *
+ *   - not_configured  — deliberate. CSV-only is a valid way to run this, never a fault.
+ *   - misconfigured   — a key path that will not open. The detail names the PATH, never the key;
+ *                       `EnableBankingConfigError` is written to be safe to surface for exactly
+ *                       this reason, and it otherwise reaches only the container log.
+ *   - no_banks        — credentials work, the provider returns nothing. A sandbox application, or
+ *                       a production one whose accounts are not whitelisted yet.
+ *   - reachable       — N banks available to connect.
+ *
+ * The probe hits the provider's catalogue endpoint, which lists banks rather than reading an
+ * account, so it is assumed not to count against the per-connection daily read budget
+ * (`dailyReadBudget` guards account reads). If the recorder shows otherwise, this moves behind an
+ * explicit refresh rather than running on every page load.
+ */
+async function bankProviderCheck(): Promise<StatusCheck> {
+  let configured: string[];
+  try {
+    configured = configuredProviders();
+  } catch (error) {
+    // isConfigured() throws rather than returning false when it is TRYING to be configured and
+    // cannot be — an unreadable key file. That is the one case where the message is safe to show,
+    // and the one case where showing it saves an hour.
+    return {
+      id: "bank_provider",
+      group: "integration",
+      severity: "error",
+      state: "misconfigured",
+      detail: error instanceof Error ? error.message : undefined,
+      remedy: "Fix the path or the key, then restart. The key is read once per process.",
+    };
+  }
+
+  if (configured.length === 0) {
+    return {
+      id: "bank_provider",
+      group: "integration",
+      severity: "simulated",
+      state: "not_configured",
+      detail: "No bank data provider credentials on this instance — CSV import only.",
+    };
+  }
+
+  const provider = getBankProvider(configured[0]);
+  if (!provider) {
+    return {
+      id: "bank_provider",
+      group: "integration",
+      severity: "warning",
+      state: "unknown",
+      remedy: "A provider reports itself configured but could not be resolved.",
+    };
+  }
+
+  try {
+    // Country is irrelevant to the count: totalAvailable is measured before the country filter.
+    const { totalAvailable } = await provider.listInstitutions("PT");
+
+    if (totalAvailable === 0) {
+      return {
+        id: "bank_provider",
+        group: "integration",
+        severity: "warning",
+        state: "no_banks",
+        detail: `${provider.displayName} accepted the credentials but offers no banks.`,
+        remedy:
+          "Check the application is a Production one and that your accounts are whitelisted. A " +
+          "Sandbox application reaches only its own mock bank.",
+      };
+    }
+
+    return {
+      id: "bank_provider",
+      group: "integration",
+      severity: "ok",
+      state: "reachable",
+      detail: `${provider.displayName}: ${totalAvailable} banks available to connect.`,
+    };
+  } catch {
+    // Deliberately no message: this one is an arbitrary network or API failure and its text can
+    // quote the request back. Same rule as databaseCheck.
+    return {
+      id: "bank_provider",
+      group: "integration",
+      severity: "warning",
+      state: "unreachable",
+      detail: `${provider.displayName} could not be reached.`,
+      remedy: "A transient provider outage, or credentials the provider rejects. See the log.",
+    };
+  }
+}
+
 function emailCheck(): StatusCheck {
   return envSet("SENDGRID_API_KEY")
     ? { id: "email", group: "integration", severity: "ok", state: "configured" }
@@ -379,6 +484,7 @@ export async function getSystemStatus(userId: string): Promise<SystemStatus> {
     sessionUserCheck(userId),
     taxChecks(userId),
     bankCheck(userId),
+    bankProviderCheck(),
   ]);
 
   const checks: StatusCheck[] = [encryptionCheck(), emailCheck(), billingCheck()];
