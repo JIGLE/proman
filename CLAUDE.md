@@ -239,6 +239,15 @@ Copy `.env.example` to `.env` before first run. Required vars:
 
 Required in production: `PII_ENCRYPTION_KEY` (64-char hex; the app exits without it)
 
+**Registration is closed by default.** The first account ever created owns the instance and is
+provisioned `ADMIN`; every other email is refused at the `signIn` callback, before any row is
+written (`lib/services/auth/registration.ts`). `AUTH_ALLOWED_EMAILS` is the additive escape hatch
+for a deliberate second user. This exists because the OAuth `signIn` callback used to `return true`
+unconditionally while the JWT callback hardcoded `role: "ADMIN"` — so any Google account that
+signed in to a publicly reachable instance became an administrator, and a live bank connection
+_requires_ public reachability for the consent callback. The gate fails closed: a database it
+cannot read refuses the sign-in rather than admitting it.
+
 Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`
 
 Optional (live bank connection — PSD2 account information via Enable Banking):

@@ -30,6 +30,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { isDemoLoginEnabled } from "@/lib/utils/demo-login";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
+import { resolveSignIn } from "@/lib/services/auth/registration";
 import { createDevSession, isDevAuthEnabled } from "@/lib/services/auth/dev-session";
 
 function createBaseAuthOptions(): NextAuthOptions {
@@ -219,6 +220,10 @@ function createBaseAuthOptions(): NextAuthOptions {
                   email: user.email,
                   name: user.name ?? undefined,
                   image: user.image ?? undefined,
+                  // ADMIN is correct here and only here: the signIn gate above admits a NEW
+                  // email in exactly two cases — first-run bootstrap, which should own the
+                  // instance, and an explicit AUTH_ALLOWED_EMAILS entry, which is a deliberate
+                  // act. Before that gate existed, this line handed admin to any Google account.
                   role: "ADMIN",
                   imageConsent: true,
                 },
@@ -407,6 +412,29 @@ function createBaseAuthOptions(): NextAuthOptions {
       }): Promise<boolean> {
         // Credentials provider — user already validated inside authorize()
         if (account?.provider === "credentials") return true;
+
+        // Registration gate. Runs BEFORE the JWT callback provisions a row, so a refused sign-in
+        // leaves nothing behind — no User, no Account, no email stored. This callback previously
+        // ended in an unconditional `return true`, and the provisioning below created every new
+        // OAuth identity as an ADMIN.
+        if (!isMockMode && user?.email) {
+          try {
+            const decision = await resolveSignIn(user.email);
+            if (!decision.allow) {
+              logger.warn("Refused sign-in: registration is closed on this instance", {
+                provider: account?.provider,
+              });
+              return false;
+            }
+          } catch (error: unknown) {
+            // Fails CLOSED. A database outage must not become a signup window.
+            logger.error(
+              "Could not evaluate the registration gate — refusing sign-in",
+              error instanceof Error ? error : new Error(String(error)),
+            );
+            return false;
+          }
+        }
 
         // For OAuth providers, clean up stale account links
         if (user && account?.provider && account?.providerAccountId) {
