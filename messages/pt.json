@@ -90,7 +90,12 @@
       "loadFailed": "Não foi possível carregar as definições.",
       "toastCanceled": "Pagamento cancelado",
       "toastSaveFailed": "Não foi possível guardar as definições.",
-      "appearance": "Aparência"
+      "appearance": "Aparência",
+      "groups": {
+        "personal": "Pessoal",
+        "workspace": "Espaço de trabalho",
+        "system": "Sistema"
+      }
     },
     "panel": {
       "accountInfo": "Informação da conta",
@@ -226,7 +231,6 @@
       "nhrDisabledByIfici": "O RNH não está disponível com o IFICI ativo — só um pode aplicar-se de cada vez.",
       "ificiDisabledByNhr": "O IFICI não está disponível com o RNH ativo — só um pode aplicar-se de cada vez.",
       "bankConnectCta": "Ligar um banco",
-      "bankNotConfigured": "Esta instância não tem credenciais de fornecedor bancário, pelo que os movimentos só podem ser importados de um ficheiro.",
       "bankPickerTitle": "Ligar um banco",
       "bankPickerHelp": "Será encaminhado para o seu banco para autorizar o acesso apenas de leitura à sua conta. O Situs nunca vê a sua senha bancária.",
       "bankCountryLabel": "País",
@@ -253,7 +257,10 @@
       "bankCountry": {
         "PT": "Portugal",
         "ES": "Espanha"
-      }
+      },
+      "bankNoProviderTitle": "Sem ligação bancária disponível",
+      "bankNoProviderBody": "Esta versão não inclui nenhum fornecedor de dados bancários, por isso os movimentos ainda não podem ser importados automaticamente.",
+      "bankNoProviderCsv": "Importe um extrato CSV em Finanças › Movimentos Bancários — a correspondência, os recibos e o livro de rendas funcionam exatamente da mesma forma com movimentos importados."
     }
   },
   "gdpr": {

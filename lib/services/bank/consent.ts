@@ -75,11 +75,26 @@ export interface StartedConsent {
  */
 export async function startConsent(
   userId: string,
-  input: { country: string; institutionId: string; institutionName: string },
+  input: {
+    country: string;
+    institutionId: string;
+    institutionName: string;
+    /** Which provider to consent through. Required once an instance can have more than one. */
+    providerKey: string;
+  },
 ): Promise<StartedConsent> {
-  const [providerKey] = configuredProviders();
-  if (!providerKey) {
+  const available = configuredProviders();
+  if (available.length === 0) {
     throw new ConsentFlowError("No bank data provider is configured on this instance", 503);
+  }
+
+  // Validated against the configured set rather than taken on trust, and rather than the
+  // `const [providerKey] = configuredProviders()` this used to do — first-wins silently ignored
+  // the caller's choice, so on an instance with two providers the picker would send you to
+  // whichever sorted first.
+  const providerKey = input.providerKey.trim().toLowerCase();
+  if (!available.includes(providerKey)) {
+    throw new ConsentFlowError("That bank data provider is not available on this instance", 400);
   }
   const provider = getBankProvider(providerKey);
   if (!provider) {

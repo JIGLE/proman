@@ -6,7 +6,7 @@ const { prismaMock, importMock, providerMock } = vi.hoisted(() => ({
     bankSyncJob: { count: vi.fn() },
   },
   importMock: vi.fn(),
-  providerMock: { key: "gocardless", fetchTransactions: vi.fn() },
+  providerMock: { key: "fake", dailyReadBudget: 4, fetchTransactions: vi.fn() },
 }));
 
 vi.mock("@/lib/services/database/database", () => ({ getPrismaClient: () => prismaMock }));
@@ -21,10 +21,12 @@ import {
   syncConnection,
   syncAllDueConnections,
   remainingBudget,
-  DAILY_SYNC_BUDGET,
   SyncBudgetExceededError,
   ConnectionNotSyncableError,
 } from "./sync";
+
+/** The fake provider's own budget. It is a provider term, not a global constant. */
+const BUDGET = 4;
 import { ConsentExpiredError } from "./providers/types";
 
 const NOW = new Date("2026-08-14T10:00:00.000Z");
@@ -33,11 +35,11 @@ function connection(overrides: Record<string, unknown> = {}) {
   return {
     id: "conn-1",
     userId: "user-1",
-    provider: "psd2_gocardless",
+    provider: "psd2_fake",
     institutionName: "Banco BPI",
     status: "active",
     lastSyncAt: null,
-    metadata: JSON.stringify({ accountRefs: { "acct-1": "gc-account-1" } }),
+    metadata: JSON.stringify({ accountRefs: { "acct-1": "remote-account-1" } }),
     accounts: [{ id: "acct-1", label: "Conta ordenado", isActive: true }],
     ...overrides,
   };
@@ -60,13 +62,13 @@ beforeEach(() => {
 });
 
 /**
- * The provider's free tier allows a handful of reads per day and answers 429 for the remainder of
- * the day once that is passed — the penalty outlasts the mistake, so the cap has to be enforced
- * before a call is spent rather than discovered from the provider.
+ * Providers cap reads per day and answer 429 for the remainder of the day once that is passed —
+ * the penalty outlasts the mistake, so the cap is enforced before a call is spent rather than
+ * discovered from the provider. The number belongs to the provider, not to `sync.ts`.
  */
 describe("daily budget", () => {
   it("refuses once the day's reads are spent, and says when they return", async () => {
-    prismaMock.bankSyncJob.count.mockResolvedValue(DAILY_SYNC_BUDGET);
+    prismaMock.bankSyncJob.count.mockResolvedValue(BUDGET);
 
     const error = await syncConnection("user-1", "conn-1", NOW).catch((e) => e);
     expect(error).toBeInstanceOf(SyncBudgetExceededError);
@@ -75,7 +77,7 @@ describe("daily budget", () => {
   });
 
   it("allows the last read of the day and reports none remaining", async () => {
-    prismaMock.bankSyncJob.count.mockResolvedValue(DAILY_SYNC_BUDGET - 1);
+    prismaMock.bankSyncJob.count.mockResolvedValue(BUDGET - 1);
 
     const result = await syncConnection("user-1", "conn-1", NOW);
     expect(result.remainingBudget).toBe(0);
@@ -92,7 +94,7 @@ describe("daily budget", () => {
 
   it("reads the budget from persisted jobs, not memory", async () => {
     prismaMock.bankSyncJob.count.mockResolvedValue(1);
-    expect(await remainingBudget("conn-1", NOW)).toBe(DAILY_SYNC_BUDGET - 1);
+    expect(await remainingBudget("conn-1", "psd2_fake", NOW)).toBe(BUDGET - 1);
   });
 });
 

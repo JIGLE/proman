@@ -23,9 +23,9 @@ export const runtime = "nodejs";
  * so a button that spends a rate-limited API call cannot be rendered next to a row that has no
  * API behind it.
  *
- * `providersConfigured` is what a self-hosted instance without credentials is missing: the code
- * always ships GoCardless registered, so the UI must ask what is *configured* before offering to
- * connect anything.
+ * `providersConfigured` is the list the UI must consult before offering to connect anything. It
+ * is empty both when no adapter ships — the current state — and when one ships without
+ * credentials, and the UI treats those the same way: CSV import only.
  */
 async function handleGet(request: NextRequest): Promise<Response> {
   const authResult = await requireOwnerAccess(request);
@@ -53,7 +53,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
         ...row,
         isProvider,
         canSync: isProvider && row.status === "active",
-        remainingBudget: isProvider ? await remainingBudget(row.id) : null,
+        remainingBudget: isProvider ? await remainingBudget(row.id, row.provider) : null,
       };
     }),
   );

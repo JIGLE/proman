@@ -90,7 +90,12 @@
       "loadFailed": "No se han podido cargar los ajustes.",
       "toastCanceled": "Pago cancelado",
       "toastSaveFailed": "No se han podido guardar los ajustes.",
-      "appearance": "Apariencia"
+      "appearance": "Apariencia",
+      "groups": {
+        "personal": "Personal",
+        "workspace": "Espacio de trabajo",
+        "system": "Sistema"
+      }
     },
     "panel": {
       "accountInfo": "Información de la cuenta",
@@ -226,7 +231,6 @@
       "nhrDisabledByIfici": "El NHR no está disponible mientras IFICI esté activo — solo uno puede aplicarse a la vez.",
       "ificiDisabledByNhr": "IFICI no está disponible mientras el NHR esté activo — solo uno puede aplicarse a la vez.",
       "bankConnectCta": "Conectar un banco",
-      "bankNotConfigured": "Esta instancia no tiene credenciales de proveedor bancario, por lo que los movimientos solo pueden importarse desde un archivo.",
       "bankPickerTitle": "Conectar un banco",
       "bankPickerHelp": "Se le enviará a su banco para autorizar el acceso de solo lectura a su cuenta. Situs nunca ve su contraseña bancaria.",
       "bankCountryLabel": "País",
@@ -253,7 +257,10 @@
       "bankCountry": {
         "PT": "Portugal",
         "ES": "España"
-      }
+      },
+      "bankNoProviderTitle": "Sin conexión bancaria disponible",
+      "bankNoProviderBody": "Esta versión no incluye ningún proveedor de datos bancarios, así que los movimientos aún no pueden importarse automáticamente.",
+      "bankNoProviderCsv": "Importa un extracto CSV en Finanzas › Movimientos Bancarios — la conciliación, los recibos y el libro de rentas funcionan igual con movimientos importados."
     }
   },
   "gdpr": {

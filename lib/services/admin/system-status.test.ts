@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 /**
  * The two properties this page must never lose.
@@ -239,6 +239,44 @@ describe("the signed-in account resolves to a real user row", () => {
  * exact failure the file's first rule exists to prevent. It has to read the state, not assert it.
  */
 describe("the bank check reports what is actually connected", () => {
+  // Registered for the cases that need a `psd2_*` row to RESOLVE. The registry ships empty, so
+  // without this those rows would look like a connection to a provider that is not installed —
+  // which is a real state, and gets its own case below.
+  let unregister: (() => void) | null = null;
+
+  beforeEach(async () => {
+    const { createFakeProvider } = await import("@/lib/services/bank/providers/fake-provider");
+    const { __registerProviderForTest } = await import("@/lib/services/bank/providers/registry");
+    unregister = __registerProviderForTest(createFakeProvider({ key: "fake" }));
+  });
+
+  afterEach(() => {
+    unregister?.();
+    unregister = null;
+  });
+
+  it("warns when a connection names a provider this build no longer ships", async () => {
+    // A row persisted by an adapter that has since been removed. It cannot sync and cannot be
+    // reconnected — but calling that `simulated` would file a stranded connection under "working
+    // as intended", which is the same class of dishonesty this whole check was written to fix.
+    unregister?.();
+    unregister = null;
+    prismaMock.bankConnection.findMany.mockResolvedValue([
+      {
+        provider: "psd2_departed",
+        status: "active",
+        lastSyncAt: null,
+        institutionName: "Banco BPI",
+      },
+    ]);
+
+    const { checks } = await getSystemStatus("user-1");
+    const bank = find(checks, "bank")!;
+    expect(bank.severity).toBe("warning");
+    expect(bank.state).toBe("provider_not_installed");
+    expect(bank.detail).toMatch(/Banco BPI/);
+  });
+
   it("is simulated when only manual/CSV connections exist", async () => {
     prismaMock.bankConnection.findMany.mockResolvedValue([
       { provider: "manual", status: "active", lastSyncAt: null, institutionName: "Manual import" },
@@ -254,7 +292,7 @@ describe("the bank check reports what is actually connected", () => {
     prismaMock.bankConnection.findMany.mockResolvedValue([
       { provider: "manual", status: "active", lastSyncAt: null, institutionName: "Manual import" },
       {
-        provider: "psd2_gocardless",
+        provider: "psd2_fake",
         status: "active",
         lastSyncAt: new Date("2026-08-14T08:00:00Z"),
         institutionName: "Banco BPI",
@@ -271,7 +309,7 @@ describe("the bank check reports what is actually connected", () => {
     // Nothing arrives in this state, so it must not sit quietly as ok or simulated.
     prismaMock.bankConnection.findMany.mockResolvedValue([
       {
-        provider: "psd2_gocardless",
+        provider: "psd2_fake",
         status: "expired",
         lastSyncAt: new Date("2026-08-01T08:00:00Z"),
         institutionName: "Banco BPI",
@@ -287,13 +325,13 @@ describe("the bank check reports what is actually connected", () => {
   it("prefers the expired warning when one connection works and another does not", async () => {
     prismaMock.bankConnection.findMany.mockResolvedValue([
       {
-        provider: "psd2_gocardless",
+        provider: "psd2_fake",
         status: "active",
         lastSyncAt: null,
         institutionName: "Banco BPI",
       },
       {
-        provider: "psd2_gocardless",
+        provider: "psd2_fake",
         status: "expired",
         lastSyncAt: null,
         institutionName: "Santander",

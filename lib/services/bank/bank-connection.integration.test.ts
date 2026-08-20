@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
 import { execSync } from "node:child_process";
 import { mkdtempSync, rmSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+
+import type { BankCsvRow } from "./csv";
 
 /**
  * The live bank connection, end to end, against a real SQLite file.
@@ -22,81 +24,48 @@ import path from "node:path";
  * It also proves the piece no unit test can: that `importBankRows`' `target` really attributes a
  * synced movement to the provider connection rather than the find-or-created "Manual import" one.
  *
- * ONLY GoCardless's HTTP boundary is faked. Prisma, SQLite, the schema, the constraints, the
- * consent service, the sync orchestration and the whole import pipeline are real.
+ * ONLY the provider is faked, at the published `BankDataProvider` boundary. Prisma, SQLite, the
+ * schema, the constraints, the consent service, the sync orchestration and the whole import
+ * pipeline are real. This used to stub `fetch` and route one vendor's URLs, which quietly made a
+ * pipeline test depend on a vendor's JSON staying still.
  */
 describe("live bank connection — real Prisma client + real SQLite file", () => {
   let tempDir: string;
   let dbUrl: string;
   let userId: string;
 
+  /** The fake provider's own read budget — a provider term, not a global constant. */
+  const DAILY_BUDGET = 4;
+
   /**
-   * GoCardless-shaped responses. These encode this author's *assumptions* about the API and are the
-   * one thing here that is not verified against reality — see `scripts/gocardless-sandbox-check.mjs`,
-   * which records the real payloads so these can be replaced with recorded truth.
+   * Rows exactly as a provider hands them over. There is no HTTP here and no vendor payload to
+   * map: this file used to stub `fetch` and route one vendor's URLs, which meant the pipeline's
+   * properties — consent scoping, the read budget, fingerprint dedupe, the IBAN encrypted at rest
+   * — were asserted through an adapter that could change under them. A fake implementing the
+   * published contract keeps the subject of the test the thing being tested.
    */
-  const fixtures = {
-    token: { access: "test-access-token", access_expires: 86400 },
-    institutions: [
-      {
-        id: "SANDBOXFINANCE_SFIN0000",
-        name: "Sandbox Finance",
-        transaction_total_days: "90",
-        logo: "https://example.invalid/logo.png",
-      },
-    ],
-    agreement: { id: "agreement-1" },
-    requisition: { id: "requisition-1", link: "https://bank.invalid/authorise" },
-    requisitionGet: { id: "requisition-1", status: "LN", accounts: ["gc-account-1"] },
-    accountDetails: {
-      account: { iban: "PT50000201231234567890154", currency: "EUR", name: "Conta ordenado" },
+  const ROWS: BankCsvRow[] = [
+    {
+      bookingDate: "2026-08-01",
+      amount: 750,
+      counterpartyName: "Ana Silva",
+      counterpartyIban: "PT50000201239999999999999",
+      reference: "RENDA AGOSTO",
     },
-    transactions: {
-      transactions: {
-        booked: [
-          {
-            transactionId: "tx-1",
-            bookingDate: "2026-08-01",
-            transactionAmount: { amount: "750.00", currency: "EUR" },
-            debtorName: "Ana Silva",
-            debtorAccount: { iban: "PT50000201239999999999999" },
-            remittanceInformationUnstructured: "RENDA AGOSTO",
-          },
-          {
-            transactionId: "tx-2",
-            bookingDate: "2026-08-02",
-            transactionAmount: { amount: "-120.50", currency: "EUR" },
-            creditorName: "EDP Comercial",
-            remittanceInformationUnstructuredArray: ["FATURA", "LUZ"],
-          },
-        ],
-        // Never imported: pending entries have no stable identity.
-        pending: [
-          { bookingDate: "2026-08-03", transactionAmount: { amount: "999.00" }, debtorName: "X" },
-        ],
-      },
+    {
+      bookingDate: "2026-08-02",
+      amount: -120.5,
+      counterpartyName: "EDP Comercial",
+      reference: "FATURA LUZ",
     },
-  };
+  ];
 
-  let transactionsPayload: unknown = fixtures.transactions;
-  let accountsPayload: unknown = fixtures.requisitionGet;
-  let failTransactionsWith: number | null = null;
+  const REMOTE_ACCOUNT_ID = "remote-account-1";
+  const IBAN = "PT50000201231234567890154";
 
-  function route(url: string): { status: number; body: unknown } {
-    if (url.includes("/token/new/")) return { status: 200, body: fixtures.token };
-    if (url.includes("/institutions/")) return { status: 200, body: fixtures.institutions };
-    if (url.includes("/agreements/enduser/")) return { status: 200, body: fixtures.agreement };
-    if (url.includes("/requisitions/") && url.match(/requisitions\/[^/]+\/$/)) {
-      return { status: 200, body: accountsPayload };
-    }
-    if (url.includes("/requisitions/")) return { status: 200, body: fixtures.requisition };
-    if (url.includes("/details/")) return { status: 200, body: fixtures.accountDetails };
-    if (url.includes("/transactions/")) {
-      if (failTransactionsWith) return { status: failTransactionsWith, body: {} };
-      return { status: 200, body: transactionsPayload };
-    }
-    return { status: 404, body: {} };
-  }
+  let transactionRows: BankCsvRow[] = ROWS;
+  let failTransactionsWith: Error | null = null;
+  let unregister: (() => void) | null = null;
 
   beforeAll(() => {
     tempDir = mkdtempSync(path.join(tmpdir(), "situs-bank-test-"));
@@ -110,40 +79,41 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
 
     process.env.DATABASE_URL = dbUrl;
     process.env.PII_ENCRYPTION_KEY = "c".repeat(64);
-    process.env.GOCARDLESS_SECRET_ID = "test-id";
-    process.env.GOCARDLESS_SECRET_KEY = "test-key";
     process.env.NEXTAUTH_URL = "https://situs.test";
   }, 90_000);
 
   afterAll(async () => {
     const { resetPrismaClientForTests } = await import("../database/database");
     resetPrismaClientForTests();
-    vi.unstubAllGlobals();
-    delete process.env.GOCARDLESS_SECRET_ID;
-    delete process.env.GOCARDLESS_SECRET_KEY;
     if (tempDir && existsSync(tempDir)) rmSync(tempDir, { recursive: true, force: true });
   });
 
+  afterEach(() => {
+    unregister?.();
+    unregister = null;
+  });
+
   beforeEach(async () => {
-    transactionsPayload = fixtures.transactions;
-    accountsPayload = fixtures.requisitionGet;
+    transactionRows = ROWS;
     failTransactionsWith = null;
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: unknown) => {
-        const { status, body } = route(String(input));
-        return {
-          ok: status >= 200 && status < 300,
-          status,
-          json: async () => body,
-          text: async () => JSON.stringify(body),
-        };
-      }),
-    );
-
-    const { resetTokenCache } = await import("./providers/gocardless");
-    resetTokenCache();
+    // Registered into the real registry, so consent and sync resolve it exactly as they would a
+    // shipped adapter — including `psd2_<key>` in the provider column.
+    const { createFakeProvider } = await import("./providers/fake-provider");
+    const { __registerProviderForTest } = await import("./providers/registry");
+    const base = createFakeProvider({
+      key: "fake",
+      dailyReadBudget: DAILY_BUDGET,
+      accounts: [{ id: REMOTE_ACCOUNT_ID, iban: IBAN, currency: "EUR", label: "Conta ordenado" }],
+    });
+    unregister = __registerProviderForTest({
+      ...base,
+      async fetchTransactions(accountRef: string, since?: Date) {
+        if (failTransactionsWith) throw failTransactionsWith;
+        await base.fetchTransactions(accountRef, since);
+        return transactionRows;
+      },
+    });
 
     // A real User row: every owned record foreign-keys to it, so this is what makes the FK
     // constraints below meaningful rather than decorative.
@@ -163,8 +133,9 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
 
     const started = await startConsent(userId, {
       country: "PT",
-      institutionId: "SANDBOXFINANCE_SFIN0000",
-      institutionName: "Sandbox Finance",
+      institutionId: "FAKEBANK_PT",
+      institutionName: "Fake Bank",
+      providerKey: "fake",
     });
 
     const pending = await prisma.bankConnection.findUniqueOrThrow({
@@ -187,7 +158,7 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
     });
 
     expect(connection.status).toBe("active");
-    expect(connection.provider).toBe("psd2_gocardless");
+    expect(connection.provider).toBe("psd2_fake");
     expect(connection.accounts).toHaveLength(1);
 
     const account = connection.accounts[0];
@@ -198,7 +169,7 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
     // last4. Asserting a round-trip here would have been asserting a convenience; asserting that
     // the plaintext is unrecoverable asserts the security property.
     expect(account.iban).toMatch(/^enc:/);
-    expect(account.iban).not.toContain("PT50000201231234567890154");
+    expect(account.iban).not.toContain(IBAN);
 
     // …and the two fields that ARE meant to be usable.
     expect(account.ibanHash).toMatch(/^[0-9a-f]{64}$/);
@@ -207,12 +178,12 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
     // The hash is the matcher's key, so it must be the hash OF the real IBAN, not of the
     // ciphertext — otherwise a synced account would never match a movement.
     const { hashIban } = await import("./import");
-    expect(account.ibanHash).toBe(hashIban("PT50000201231234567890154"));
+    expect(account.ibanHash).toBe(hashIban(IBAN));
 
     // The spent reference is gone and the provider account id recorded in its place.
     const metadata = JSON.parse(connection.metadata ?? "{}");
     expect(metadata.reference).toBeUndefined();
-    expect(metadata.accountRefs[account.id]).toBe("gc-account-1");
+    expect(metadata.accountRefs[account.id]).toBe(REMOTE_ACCOUNT_ID);
   });
 
   it("attributes synced movements to the provider connection, not the manual one", async () => {
@@ -230,20 +201,17 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
       orderBy: { bookingDate: "asc" },
     });
 
-    // Booked only — the pending entry in the fixture must not appear.
     expect(movements).toHaveLength(2);
     for (const m of movements) {
       expect(m.bankAccount.connection.id).toBe(connectionId);
-      expect(m.bankAccount.connection.provider).toBe("psd2_gocardless");
+      expect(m.bankAccount.connection.provider).toBe("psd2_fake");
     }
 
-    // Direction decides the counterparty: money in reads the debtor, money out the creditor.
+    // Rows land intact: sign, counterparty and reference survive the pipeline unchanged.
     expect(movements[0].amount).toBe(750);
     expect(movements[0].counterpartyName).toBe("Ana Silva");
     expect(movements[1].amount).toBe(-120.5);
     expect(movements[1].counterpartyName).toBe("EDP Comercial");
-
-    // The array remittance form is joined rather than dropped.
     expect(movements[1].reference).toBe("FATURA LUZ");
 
     // No "Manual import" connection was created — that is what `target` is for.
@@ -280,8 +248,9 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
     // Reconnect the same bank: a second consent for the same IBAN.
     const again = await startConsent(userId, {
       country: "PT",
-      institutionId: "SANDBOXFINANCE_SFIN0000",
-      institutionName: "Sandbox Finance",
+      institutionId: "FAKEBANK_PT",
+      institutionName: "Fake Bank",
+      providerKey: "fake",
     });
     const pending = await prisma.bankConnection.findUniqueOrThrow({
       where: { id: again.connectionId },
@@ -303,9 +272,9 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
 
   it("counts the day's reads from persisted jobs and then refuses", async () => {
     const connectionId = await connectAndAuthorise();
-    const { syncConnection, SyncBudgetExceededError, DAILY_SYNC_BUDGET } = await import("./sync");
+    const { syncConnection, SyncBudgetExceededError } = await import("./sync");
 
-    for (let i = 0; i < DAILY_SYNC_BUDGET; i += 1) {
+    for (let i = 0; i < DAILY_BUDGET; i += 1) {
       await syncConnection(userId, connectionId);
     }
     await expect(syncConnection(userId, connectionId)).rejects.toBeInstanceOf(
@@ -320,7 +289,7 @@ describe("live bank connection — real Prisma client + real SQLite file", () =>
     const { getPrismaClient } = await import("../database/database");
     const prisma = getPrismaClient();
 
-    failTransactionsWith = 401;
+    failTransactionsWith = new ConsentExpiredError();
 
     await expect(syncConnection(userId, connectionId)).rejects.toBeInstanceOf(ConsentExpiredError);
 

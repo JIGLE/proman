@@ -61,6 +61,18 @@ const RETIRED_CLAIMS = [
       "find-my-way was fixed by an overrides entry; the audit allowlist that carried this " +
       "advisory is gone from security-scan.yml, and it swallowed a real finding before it went",
   },
+  {
+    pattern: /bankaccountdata\.gocardless\.com/i,
+    retired: "2026-08-20",
+    because:
+      "GoCardless closed Bank Account Data to new signups in July 2025, so telling an operator " +
+      "to create credentials there sends them somewhere they cannot sign up",
+  },
+  {
+    pattern: /connect a bank.{0,40}gocardless|gocardless.{0,40}connect a bank/i,
+    retired: "2026-08-20",
+    because: "the adapter was removed; the registry ships empty and CSV import is the path",
+  },
 ];
 
 /** Lines allowed to mention a retired claim, because they are the record of its retirement. */

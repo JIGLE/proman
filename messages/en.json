@@ -90,7 +90,12 @@
       "loadFailed": "Couldn't load your settings.",
       "toastCanceled": "Checkout canceled",
       "toastSaveFailed": "Couldn't save your settings.",
-      "appearance": "Appearance"
+      "appearance": "Appearance",
+      "groups": {
+        "personal": "Personal",
+        "workspace": "Workspace",
+        "system": "System"
+      }
     },
     "panel": {
       "accountInfo": "Account Information",
@@ -226,7 +231,6 @@
       "nhrDisabledByIfici": "NHR is unavailable while IFICI is active — only one can apply at a time.",
       "ificiDisabledByNhr": "IFICI is unavailable while NHR is active — only one can apply at a time.",
       "bankConnectCta": "Connect a bank",
-      "bankNotConfigured": "This instance has no bank provider credentials, so movements can only be imported from a file.",
       "bankPickerTitle": "Connect a bank",
       "bankPickerHelp": "You will be sent to your bank to authorise read-only access to your account. Situs never sees your banking password.",
       "bankCountryLabel": "Country",
@@ -253,7 +257,10 @@
       "bankCountry": {
         "PT": "Portugal",
         "ES": "Spain"
-      }
+      },
+      "bankNoProviderTitle": "No bank connection available",
+      "bankNoProviderBody": "This build ships no bank data provider, so movements cannot be imported automatically yet.",
+      "bankNoProviderCsv": "Import a CSV statement from Finance › Bank Movements — matching, receipts and the rent ledger all work exactly the same on imported movements."
     }
   },
   "gdpr": {

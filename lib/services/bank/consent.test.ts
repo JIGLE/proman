@@ -10,7 +10,7 @@ const { prismaMock, providerMock, configuredMock } = vi.hoisted(() => ({
     },
     bankAccount: { findFirst: vi.fn(), create: vi.fn(), update: vi.fn() },
   },
-  providerMock: { key: "gocardless", createConsentLink: vi.fn(), completeConsent: vi.fn() },
+  providerMock: { key: "fake", createConsentLink: vi.fn(), completeConsent: vi.fn() },
   configuredMock: vi.fn(),
 }));
 
@@ -33,7 +33,7 @@ const REFERENCE = "a".repeat(64);
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.NEXTAUTH_URL = "https://situs.example.com";
-  configuredMock.mockReturnValue(["gocardless"]);
+  configuredMock.mockReturnValue(["fake"]);
   prismaMock.bankConnection.create.mockResolvedValue({ id: "conn-1" });
   prismaMock.bankConnection.update.mockResolvedValue({});
   prismaMock.bankConnection.findUnique.mockResolvedValue({ metadata: null });
@@ -55,12 +55,13 @@ describe("starting a consent", () => {
       country: "PT",
       institutionId: "BANCOBPI_BBPIPTPL",
       institutionName: "Banco BPI",
+      providerKey: "fake",
     });
 
     const created = prismaMock.bankConnection.create.mock.calls[0][0].data;
     expect(created).toMatchObject({
       userId: "user-1",
-      provider: "psd2_gocardless",
+      provider: "psd2_fake",
       status: "pending_consent",
     });
     expect(prismaMock.bankConnection.create.mock.invocationCallOrder[0]).toBeLessThan(
@@ -73,6 +74,7 @@ describe("starting a consent", () => {
       country: "PT",
       institutionId: "X",
       institutionName: "Bank",
+      providerKey: "fake",
     });
 
     const { reference } = JSON.parse(
@@ -86,7 +88,28 @@ describe("starting a consent", () => {
     configuredMock.mockReturnValue([]);
 
     await expect(
-      startConsent("user-1", { country: "PT", institutionId: "X", institutionName: "Bank" }),
+      startConsent("user-1", {
+        country: "PT",
+        institutionId: "X",
+        institutionName: "Bank",
+        providerKey: "fake",
+      }),
+    ).rejects.toBeInstanceOf(ConsentFlowError);
+    expect(prismaMock.bankConnection.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses a provider this instance is not configured for", async () => {
+    // `startConsent` used to do `const [providerKey] = configuredProviders()` — first-wins, so a
+    // caller asking for one provider silently got whichever sorted first. Rejecting is the only
+    // honest answer; quietly consenting through a different bank data provider is not.
+    configuredMock.mockReturnValue(["alpha", "zulu"]);
+    await expect(
+      startConsent("user-1", {
+        country: "PT",
+        institutionId: "X",
+        institutionName: "Bank",
+        providerKey: "not-installed",
+      }),
     ).rejects.toBeInstanceOf(ConsentFlowError);
     expect(prismaMock.bankConnection.create).not.toHaveBeenCalled();
   });
@@ -95,7 +118,12 @@ describe("starting a consent", () => {
     delete process.env.NEXTAUTH_URL;
 
     await expect(
-      startConsent("user-1", { country: "PT", institutionId: "X", institutionName: "Bank" }),
+      startConsent("user-1", {
+        country: "PT",
+        institutionId: "X",
+        institutionName: "Bank",
+        providerKey: "fake",
+      }),
     ).rejects.toThrow(/NEXTAUTH_URL/);
   });
 });
@@ -109,7 +137,7 @@ describe("completing a consent", () => {
     return {
       id: "conn-1",
       userId: "user-1",
-      provider: "psd2_gocardless",
+      provider: "psd2_fake",
       institutionName: "Banco BPI",
       status: "pending_consent",
       consentId: "req-1",

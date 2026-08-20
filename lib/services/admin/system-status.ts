@@ -31,7 +31,7 @@
 import { getPrismaClient } from "@/lib/services/database/database";
 import { checkSchemaDrift } from "./schema-drift";
 import { registeredCountries, getTaxConnector } from "@/lib/tax/connectors/registry";
-import { getProviderForConnection } from "@/lib/services/bank/providers/registry";
+import { getProviderForConnection, PSD2_PREFIX } from "@/lib/services/bank/providers/registry";
 import { authorityName, modeKind } from "@/lib/tax/connectors/presentation";
 
 /**
@@ -224,6 +224,14 @@ async function bankCheck(userId: string): Promise<StatusCheck> {
     const expired = live.filter((c) => c.status === "expired");
     const active = live.filter((c) => c.status === "active");
 
+    // A row whose `psd2_<key>` names an adapter this build no longer ships. It cannot sync and it
+    // cannot be reconnected, but it is not "manual only" either — reporting it as `simulated`
+    // would file a stranded connection under "working as intended". Named explicitly so the
+    // remedy is obvious rather than mysterious.
+    const orphaned = connections.filter(
+      (c) => c.provider.startsWith(PSD2_PREFIX) && !getProviderForConnection(c.provider),
+    );
+
     if (expired.length > 0) {
       return {
         id: "bank",
@@ -245,6 +253,21 @@ async function bankCheck(userId: string): Promise<StatusCheck> {
         detail:
           `Connected to ${active.map((c) => c.institutionName).join(", ")} ` +
           `via PSD2 account information.${since}`,
+      };
+    }
+
+    if (orphaned.length > 0) {
+      return {
+        id: "bank",
+        group: "integration",
+        severity: "warning",
+        state: "provider_not_installed",
+        detail:
+          `${orphaned.map((c) => c.institutionName).join(", ")} was connected with a bank data ` +
+          `provider this build no longer ships, so it cannot sync.${since}`,
+        remedy:
+          "Import statements by CSV in Finance › Bank Movements. The movements already imported " +
+          "are unaffected.",
       };
     }
 

@@ -96,23 +96,37 @@ the header is ignored entirely. Getting it wrong lets a caller pick their own ra
 > availability from `ENABLE_DEMO_LOGIN` on the server per request, so one variable controls both
 > the form and the provider. Remove it if it is still set.
 
-## Connecting a bank (optional)
+## Bank movements
 
-Without credentials the app imports movements from a CSV you export from your bank, and Settings
-› Integrations shows no connect button — deliberately, since a button that can only fail is worse
-than none. To connect a bank directly instead:
+**No bank data provider ships in this build**, so there is nothing to configure and Settings ›
+Integrations shows no connect button — deliberately, since a button that can only fail is worse
+than none.
 
-1. Create free credentials at <https://bankaccountdata.gocardless.com/user-secrets/>. GoCardless
-   holds the AISP licence, so this instance needs none of its own.
-2. Register `https://<your-host>/api/bank/connections/callback` as a redirect URI with them. It
-   must match `NEXTAUTH_URL` exactly, or the bank refuses to return the user.
-3. Set `GOCARDLESS_SECRET_ID` and `GOCARDLESS_SECRET_KEY`, then restart.
-4. Settings › Integrations → **Connect a bank**. You are sent to your own bank to authorise
-   read-only access; Situs never sees your banking password.
+Import movements from a CSV you export from your bank, in Finance › Bank Movements. Nothing
+downstream is lost by doing it that way: an imported movement goes through the same fingerprint
+dedupe, reconciliation rules, confidence scoring and 0.85 auto-allocation threshold a synced one
+would, so matching, receipts and the rent ledger behave identically.
 
-Reads are capped at roughly **4 per account per day** on the free tier, and the provider answers
-429 for the rest of the day once that is passed. The app enforces the budget itself and shows
-what is left, so "Sync now" refuses rather than burning the allowance.
+The adapter that used to live here spoke to GoCardless Bank Account Data, which **stopped
+accepting new signups in July 2025**. It could therefore only ever work for an instance that
+already held credentials, and no new operator could obtain any, so it was removed. `git log
+--diff-filter=D --name-only` finds it if it is ever wanted back.
+
+### What this instance actually needs
+
+Worth knowing before signing up for anything: almost every external service is optional, and a
+self-hosted instance collecting rent by bank transfer needs none of them.
+
+| Service            | Required?  | What it is for                                                                                                                               |
+| ------------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bank data provider | none ships | statement reading — CSV import instead                                                                                                       |
+| Stripe             | optional   | collecting rent by card/SEPA, and subscription billing. Unset, the payment routes answer "not configured" and plan limits are never enforced |
+| SendGrid           | optional   | outbound email. Unset, email is simply not sent                                                                                              |
+| Redis              | optional   | caching                                                                                                                                      |
+| Google OAuth       | optional   | sign-in. Credentials sign-in works without it                                                                                                |
+
+Required in every case: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, and
+`PII_ENCRYPTION_KEY` in production.
 
 For the daily automatic sync, set `CRON_SECRET` and point a scheduler at the endpoint once a day:
 

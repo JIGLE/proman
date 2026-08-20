@@ -76,7 +76,7 @@ Dated, point-in-time, and still load-bearing where noted:
 - [Redis rate limiting](REDIS_RATE_LIMITING.md)
 - [Webhook templates](webhook-templates.md)
 
-Bank connections (PSD2 / GoCardless) are documented in [truenas.md](truenas.md#connecting-a-bank-optional)
+Bank movements — no provider ships; CSV import is the path — are documented in [truenas.md](truenas.md#bank-movements)
 and `CLAUDE.md`, because setup is deployment-shaped rather than integration-shaped.
 
 ## UX & accessibility

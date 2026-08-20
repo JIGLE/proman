@@ -21,7 +21,7 @@ import type { BankCsvRow } from "../csv";
 
 /** A bank the provider can connect to, for the institution picker. */
 export interface Institution {
-  /** Provider-scoped id, e.g. GoCardless's "BANCOBPI_BBPIPTPL". */
+  /** Provider-scoped id, opaque to everything outside the adapter that issued it. */
   id: string;
   name: string;
   /** ISO-3166 alpha-2, upper case. */
@@ -85,6 +85,30 @@ export class ConsentExpiredError extends Error {
 export interface BankDataProvider {
   /** Stable key; `BankConnection.provider` is stored as `psd2_<key>`. */
   key: string;
+
+  /** Name for the picker, shown only when an instance has more than one provider. */
+  displayName: string;
+
+  /**
+   * Whether this instance holds usable credentials for this provider.
+   *
+   * Lives on the provider because the registry used to name one key and return `false` for
+   * every other — so a second adapter could be registered, resolved and fully credentialled, and
+   * still never be offered, with no error anywhere to say why. Registering a provider is now the
+   * only step needed to make it available.
+   */
+  isConfigured(): boolean;
+
+  /**
+   * Provider reads allowed per connection per day, enforced by `sync.ts` BEFORE a call is spent.
+   *
+   * This is a commercial term, not a property of open banking, so it belongs to the adapter that
+   * knows it. It was a module-level `DAILY_SYNC_BUDGET = 4` justified entirely by one provider's
+   * free tier — a rule that would have outlived the vendor that explained it.
+   *
+   * Under-syncing costs a delay; over-syncing can cost a whole day of 429s. Be conservative.
+   */
+  dailyReadBudget: number;
 
   /** Banks available in a country, for the picker. */
   listInstitutions(country: string): Promise<Institution[]>;

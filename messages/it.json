@@ -90,7 +90,12 @@
       "loadFailed": "Impossibile caricare le impostazioni.",
       "toastCanceled": "Pagamento annullato",
       "toastSaveFailed": "Impossibile salvare le impostazioni.",
-      "appearance": "Aspetto"
+      "appearance": "Aspetto",
+      "groups": {
+        "personal": "Personale",
+        "workspace": "Area di lavoro",
+        "system": "Sistema"
+      }
     },
     "panel": {
       "accountInfo": "Informazioni dell'account",
@@ -226,7 +231,6 @@
       "nhrDisabledByIfici": "L'NHR non è disponibile mentre IFICI è attivo — se ne può applicare solo uno alla volta.",
       "ificiDisabledByNhr": "IFICI non è disponibile mentre l'NHR è attivo — se ne può applicare solo uno alla volta.",
       "bankConnectCta": "Collega una banca",
-      "bankNotConfigured": "Questa istanza non ha credenziali del fornitore bancario, quindi i movimenti possono essere importati solo da un file.",
       "bankPickerTitle": "Collega una banca",
       "bankPickerHelp": "Verrai indirizzato alla tua banca per autorizzare l'accesso in sola lettura al tuo conto. Situs non vede mai la tua password bancaria.",
       "bankCountryLabel": "Paese",
@@ -253,7 +257,10 @@
       "bankCountry": {
         "PT": "Portogallo",
         "ES": "Spagna"
-      }
+      },
+      "bankNoProviderTitle": "Nessuna connessione bancaria disponibile",
+      "bankNoProviderBody": "Questa build non include alcun fornitore di dati bancari, quindi i movimenti non possono ancora essere importati automaticamente.",
+      "bankNoProviderCsv": "Importa un estratto conto CSV da Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti funzionano allo stesso modo sui movimenti importati."
     }
   },
   "gdpr": {

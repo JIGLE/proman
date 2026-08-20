@@ -17,19 +17,26 @@ import { getProviderForConnection } from "./providers/registry";
 import { ConsentExpiredError } from "./providers/types";
 
 /**
- * Provider reads allowed per connection per day.
+ * Fallback read budget for a connection whose provider is no longer registered.
  *
- * GoCardless's free tier permits 4 per ACCOUNT, and going over returns 429 for the rest of the
- * day — the penalty outlasts the mistake. So the cap is enforced here, before a call is spent,
- * rather than discovered from the provider. The daily scheduler takes one, which deliberately
- * leaves three for a human pressing "Sync now" after a payment they are expecting.
- *
- * Counted per connection rather than per account, because `BankSyncJob` has no account column.
- * For a connection holding several accounts that is conservative — one run spends one unit per
- * account, so the budget is reached sooner than the provider would actually refuse. That is the
- * right direction to be wrong in: under-syncing costs a delay, over-syncing costs a whole day.
+ * The real number is `BankDataProvider.dailyReadBudget` — a commercial term the adapter owns. This
+ * only covers the case where a stored connection names a provider this build no longer ships, and
+ * it is deliberately the most conservative value: under-syncing costs a delay, over-syncing can
+ * cost a whole day of 429s.
  */
-export const DAILY_SYNC_BUDGET = 4;
+const FALLBACK_DAILY_BUDGET = 1;
+
+/**
+ * Reads allowed per day for whatever provider backs this connection.
+ *
+ * Counted per connection rather than per account, because `BankSyncJob` has no account column. For
+ * a connection holding several accounts that is conservative — one run spends one unit per account,
+ * so the budget is reached sooner than the provider would actually refuse. That is the right
+ * direction to be wrong in.
+ */
+function budgetFor(providerColumn: string): number {
+  return getProviderForConnection(providerColumn)?.dailyReadBudget ?? FALLBACK_DAILY_BUDGET;
+}
 
 /**
  * Days of overlap re-requested on each sync.
@@ -44,9 +51,9 @@ const OVERLAP_DAYS = 3;
 export class SyncBudgetExceededError extends Error {
   readonly resetAt: Date;
 
-  constructor(resetAt: Date) {
+  constructor(resetAt: Date, budget: number) {
     super(
-      `This account has used its ${DAILY_SYNC_BUDGET} bank reads for today. ` +
+      `This account has used its ${budget} bank reads for today. ` +
         `More are available after ${resetAt.toISOString()}.`,
     );
     this.name = "SyncBudgetExceededError";
@@ -96,8 +103,12 @@ async function spentToday(connectionId: string, now: Date): Promise<number> {
 }
 
 /** Reads still available on a connection today. */
-export async function remainingBudget(connectionId: string, now = new Date()): Promise<number> {
-  return Math.max(0, DAILY_SYNC_BUDGET - (await spentToday(connectionId, now)));
+export async function remainingBudget(
+  connectionId: string,
+  providerColumn: string,
+  now = new Date(),
+): Promise<number> {
+  return Math.max(0, budgetFor(providerColumn) - (await spentToday(connectionId, now)));
 }
 
 /**
@@ -136,9 +147,10 @@ export async function syncConnection(
     );
   }
 
+  const budget = budgetFor(connection.provider);
   const spent = await spentToday(connectionId, now);
-  if (spent >= DAILY_SYNC_BUDGET) {
-    throw new SyncBudgetExceededError(nextReset(now));
+  if (spent >= budget) {
+    throw new SyncBudgetExceededError(nextReset(now), budget);
   }
 
   const since = connection.lastSyncAt
@@ -187,7 +199,7 @@ export async function syncConnection(
     connectionId: connection.id,
     accountsChecked: summaries.length,
     summaries,
-    remainingBudget: Math.max(0, DAILY_SYNC_BUDGET - (spent + 1)),
+    remainingBudget: Math.max(0, budget - (spent + 1)),
   };
 }
 
