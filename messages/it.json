@@ -259,7 +259,7 @@
         "ES": "Spagna"
       },
       "bankNoProviderTitle": "Connessione bancaria non configurata",
-      "bankNoProviderBody": "Questa istanza non ha credenziali Enable Banking, quindi i movimenti non possono essere importati automaticamente. Imposta ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY e riavvia.",
+      "bankNoProviderBody": "Questa istanza non ha credenziali Enable Banking, quindi i movimenti non possono essere importati automaticamente. Imposta ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY_FILE che punta al .pem montato, poi riavvia.",
       "bankNoProviderCsv": "Nel frattempo l'importazione CSV funziona, in Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti si comportano allo stesso modo."
     }
   },

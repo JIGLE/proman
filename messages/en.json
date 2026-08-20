@@ -259,7 +259,7 @@
         "ES": "Spain"
       },
       "bankNoProviderTitle": "Bank connection not configured",
-      "bankNoProviderBody": "This instance has no Enable Banking credentials, so movements cannot be imported automatically. Set ENABLE_BANKING_APPLICATION_ID and ENABLE_BANKING_PRIVATE_KEY, then restart.",
+      "bankNoProviderBody": "This instance has no Enable Banking credentials, so movements cannot be imported automatically. Set ENABLE_BANKING_APPLICATION_ID and ENABLE_BANKING_PRIVATE_KEY_FILE pointing at the mounted .pem, then restart.",
       "bankNoProviderCsv": "CSV import works meanwhile, in Finance › Bank Movements — matching, receipts and the rent ledger behave exactly the same on imported movements."
     }
   },
