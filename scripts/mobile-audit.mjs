@@ -20,6 +20,7 @@
  *   node scripts/mobile-audit.mjs --seed           # (re)seed demo data first
  *   node scripts/mobile-audit.mjs --seed --strict  # ratchet: non-zero exit past BASELINE
  *   node scripts/mobile-audit.mjs --width 1440     # desktop regression pass
+ *   node scripts/mobile-audit.mjs --locale pt      # longest-label locale
  *   node scripts/mobile-audit.mjs --only portfolio # filter surfaces by id substring
  */
 
@@ -59,6 +60,12 @@ const opt = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 
+/**
+ * Locale to audit. Surface paths are written `/en/...`, but English is the SHORTEST of the
+ * four catalogues — Portuguese and Spanish labels are materially longer, and label length
+ * is what actually breaks a nav or a tab bar. Auditing only `/en` measures the best case.
+ */
+const LOCALE = opt("locale", "en");
 const VIEWPORT_WIDTH = Number(opt("width", 390));
 const VIEWPORT_HEIGHT = Number(opt("height", 844));
 const ONLY = opt("only", null);
@@ -104,6 +111,10 @@ const STRICT = flag("strict");
  */
 const BASELINE = {
   pageOverflow: 0,
+  // Elements sized to the full viewport that do not start at its top, so they force the
+  // scroll container past its floor by however much chrome sits above them. Pinned at 0:
+  // this is a structural mistake, never a quantity of content.
+  viewportTallChildren: 0,
   touchTargetFails: 4,
   touchTargetWarns: 4,
   clippedContainers: 6,
@@ -154,6 +165,7 @@ const SURFACES = [
  */
 function measure({ touchFail, touchWarn, minFontPx, tolerance }) {
   const vw = document.documentElement.clientWidth;
+  const vh = window.innerHeight;
 
   const describe = (el) => {
     const cls =
@@ -304,9 +316,48 @@ function measure({ touchFail, touchWarn, minFontPx, tolerance }) {
     if (r.right <= 0 || r.left >= vw) clipped.push({ ...describe(el), left: Math.round(r.left) });
   }
 
+  // --- app-shell vertical overflow -----------------------------------------------------
+  // The shell is `h-screen overflow-hidden` wrapping an inner `overflow-y-auto`, so the
+  // document never scrolls and `scrollingElement` reads 0 on BOTH axes. Any vertical
+  // measurement taken from it would be a zero meaning "not measured" — which is how a constant
+  // scrollbar on a page that otherwise fits went unnoticed. The scroller is `#main-content`.
+  //
+  // `verticalOverflow` alone is NOT a defect: a page with more content than fits is supposed
+  // to scroll, and an early version of this check that flagged "small" overflows reported the
+  // Finance tax tab at +140px, where nothing is broken and the content is simply that tall.
+  //
+  // The defect worth naming is specific: an element sized to the VIEWPORT (100vh) that does
+  // not start at the viewport's top. Its own height already equals the whole screen, so
+  // everything above it — headers, padding, breadcrumbs — is pure overshoot, and the container
+  // is forced to scroll by exactly that much no matter how little content the page holds.
+  // That is a structural mistake rather than a quantity of content, and it is what the
+  // Portfolio asset rail was doing.
+  const mainEl = document.querySelector("#main-content");
+  let verticalOverflow = 0;
+  const viewportTallEls = [];
+  if (mainEl) {
+    verticalOverflow = Math.max(0, mainEl.scrollHeight - mainEl.clientHeight);
+    const mainTop = mainEl.getBoundingClientRect().top;
+    for (const el of all) {
+      if (!mainEl.contains(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      if (isVisuallyHidden(el)) continue;
+      // Height is the viewport's, to within a rounding pixel...
+      if (Math.abs(r.height - vh) > 1) continue;
+      // ...but it starts below the container's top, so it cannot possibly fit.
+      const overshoot = Math.round(r.top - mainTop);
+      if (overshoot <= tolerance) continue;
+      viewportTallEls.push({ ...describe(el), overshoot, height: Math.round(r.height) });
+    }
+  }
+
   return {
     viewportWidth: vw,
     pageOverflow,
+    verticalOverflow,
+    viewportTallEls: viewportTallEls.sort((a, b) => b.overshoot - a.overshoot).slice(0, 8),
+    viewportTallCount: viewportTallEls.length,
     docScrollWidth: scroller.scrollWidth,
     overflowOffenders: dedupedOverflow.slice(0, 12),
     containerOverflow: containerOverflow.sort((a, b) => b.amount - a.amount).slice(0, 12),
@@ -413,7 +464,10 @@ async function auditSurface(context, surface, theme, ids) {
   );
   await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
 
-  const path = surface.path.replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "");
+  const path = surface.path
+    .replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "")
+    // Locale-prefixed routes only; /auth/* and /tenant-portal/* carry no prefix.
+    .replace(/^\/en(?=\/|$)/, `/${LOCALE}`);
   const url = `${BASE}${path}`;
 
   const result = {
@@ -501,7 +555,7 @@ function score(r) {
 
 function toMarkdown(results, meta) {
   const lines = [];
-  lines.push(`# Responsive audit — ${meta.viewport}`);
+  lines.push(`# Responsive audit — ${meta.viewport} — locale ${meta.locale}`);
   lines.push("");
   lines.push(`Run: ${meta.when} · base \`${BASE}\` · themes ${meta.themes.join(", ")}`);
   lines.push("");
@@ -549,6 +603,7 @@ function toMarkdown(results, meta) {
   for (const r of [...ok].sort((a, b) => score(b) - score(a))) {
     const badges = [];
     if (r.pageOverflow > 0) badges.push(`overflow +${r.pageOverflow}px`);
+    if (r.viewportTallCount) badges.push(`${r.viewportTallCount} viewport-tall`);
     if (r.smallTargetFailCount) badges.push(`${r.smallTargetFailCount} targets <${TOUCH_FAIL}px`);
     if (r.smallTargetCount - r.smallTargetFailCount)
       badges.push(`${r.smallTargetCount - r.smallTargetFailCount} targets <${TOUCH_WARN}px`);
@@ -561,6 +616,18 @@ function toMarkdown(results, meta) {
     lines.push("");
     lines.push(`${badges.join(" · ")}`);
     lines.push("");
+    if (r.viewportTallEls?.length) {
+      lines.push(
+        `Viewport-tall elements starting below the container top (page scrolls by the overshoot; container scroll is +${r.verticalOverflow}px):`,
+      );
+      lines.push("");
+      for (const o of r.viewportTallEls) {
+        lines.push(
+          `- \`${o.height}px tall, +${o.overshoot}px too low\` \`${o.selector}\`${o.text ? ` — "${o.text}"` : ""}`,
+        );
+      }
+      lines.push("");
+    }
     if (r.overflowOffenders?.length) {
       lines.push("Widest elements past the viewport edge:");
       lines.push("");
@@ -598,6 +665,7 @@ async function main() {
   const browser = await chromium.launch(EXECUTABLE ? { executablePath: EXECUTABLE } : {});
   const context = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    locale: LOCALE,
     deviceScaleFactor: 2,
   });
   // Surfaces marked `auth: false` (landing, signin, signup) must never see the bootstrap
@@ -605,6 +673,7 @@ async function main() {
   // which would mislabel the dashboard's own violations as belonging to the signin/signup pages.
   const anonContext = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    locale: LOCALE,
     deviceScaleFactor: 2,
   });
   // LocaleSelectOverlay is a blocking, full-screen first-visit language chooser, shown whenever
@@ -612,13 +681,13 @@ async function main() {
   // without this the signed-out surfaces were being measured underneath that overlay — the page's
   // own controls sat behind a z-[99999] scrim and the numbers described the chooser, not the page.
   // Presenting as a returning visitor measures the surface these routes actually serve.
-  await anonContext.addInitScript(() => {
+  await anonContext.addInitScript((locale) => {
     try {
-      localStorage.setItem("situs.locale.selected", "en");
+      localStorage.setItem("situs.locale.selected", locale);
     } catch {
       /* storage disabled — the overlay just shows, same as a real first visit */
     }
-  });
+  }, LOCALE);
 
   const bootstrap = await context.newPage();
   await login(bootstrap);
@@ -710,6 +779,7 @@ async function main() {
   const meta = {
     when: new Date().toISOString(),
     viewport: `${VIEWPORT_WIDTH}×${VIEWPORT_HEIGHT}`,
+    locale: LOCALE,
     themes: THEMES,
     seeded: flag("seed"),
   };
@@ -725,6 +795,7 @@ async function main() {
     surfaceRuns: results.length,
     failedToLoad: results.filter((r) => r.status === "error").length,
     pageOverflow: results.filter((r) => r.status !== "error" && r.pageOverflow > 0).length,
+    viewportTallChildren: sum(results, "viewportTallCount"),
     touchTargetFails: sum(results, "smallTargetFailCount"),
     touchTargetWarns: sum(results, "smallTargetCount"),
     clippedContainers: sum(results, "clippedContainerCount"),

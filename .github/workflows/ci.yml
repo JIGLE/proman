@@ -363,6 +363,20 @@ jobs:
           AUDIT_BASE_URL: http://localhost:3000
           CI: "true"
 
+      # Desktop, in the longest locale. Two blind spots this closes, both found by running it:
+      # the harness only ever measured 390px, and it only ever measured `/en` — the shortest of
+      # the four catalogues, so nav and tab bars were always being judged on their best case.
+      # A first PT desktop pass found a separator clipping on all 44 owner-facing surface-runs.
+      #
+      # Advisory for now (`continue-on-error`) because it has no ratchet of its own yet; the
+      # 390px run above stays the blocking gate. Give this one a BASELINE before removing that.
+      - name: Run desktop audit harness (pt)
+        run: node scripts/mobile-audit.mjs --locale pt --width 1440 --height 900
+        continue-on-error: true
+        env:
+          AUDIT_BASE_URL: http://localhost:3000
+          CI: "true"
+
       - name: Parse and report audit violations
         if: always()
         run: |

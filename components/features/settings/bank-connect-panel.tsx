@@ -84,10 +84,10 @@ interface Props {
 /**
  * The connect / sync / reconnect affordances for live bank connections.
  *
- * Everything here is gated on `providersConfigured`. A self-hosted instance with no credentials
- * gets the CSV-only view it has always had rather than a button that can only fail — the code
- * always ships GoCardless registered, so "can this instance connect a bank" is a question about
- * configuration, not about what is compiled in.
+ * Everything here is gated on `providersConfigured`, which answers two questions at once now
+ * that no adapter ships: whether this build contains a provider at all, and whether this instance
+ * has credentials for it. Either way the answer is the CSV-only view rather than a button that
+ * can only fail.
  */
 export function BankConnectPanel({ connections, providersConfigured, loading, onRefresh }: Props) {
   const t = useTranslations("settings.panel");
@@ -123,7 +123,8 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
       setError(null);
       try {
         const body = await apiFetch<{ data?: { institutions?: Institution[] } }>(
-          `/api/bank/institutions?country=${encodeURIComponent(code)}`,
+          `/api/bank/institutions?country=${encodeURIComponent(code)}` +
+            `&provider=${encodeURIComponent(providersConfigured[0] ?? "")}`,
         );
         setInstitutions(body?.data?.institutions ?? []);
       } catch {
@@ -133,7 +134,7 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
         setLoadingBanks(false);
       }
     },
-    [t],
+    [t, providersConfigured],
   );
 
   function openPicker() {
@@ -158,6 +159,9 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
           country: institution.country,
           institutionId: institution.id,
           institutionName: institution.name,
+          // Named explicitly. The server used to take whichever provider sorted first, which
+          // silently discarded the choice on an instance configured for more than one.
+          providerKey: providersConfigured[0],
         },
       );
       const url = body?.data?.url;
@@ -283,7 +287,13 @@ export function BankConnectPanel({ connections, providersConfigured, loading, on
           {t("bankConnectCta")}
         </Button>
       ) : (
-        <p className="text-xs text-muted-foreground">{t("bankNotConfigured")}</p>
+        <div className="rounded-md border border-[var(--color-border)] px-3 py-2.5">
+          <p className="text-sm font-medium text-[var(--color-foreground)]">
+            {t("bankNoProviderTitle")}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("bankNoProviderBody")}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{t("bankNoProviderCsv")}</p>
+        </div>
       )}
 
       <Sheet open={pickerOpen} onOpenChange={setPickerOpen}>

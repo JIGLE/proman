@@ -26,11 +26,25 @@ async function handleGet(request: NextRequest): Promise<Response> {
     return createErrorResponse(new Error("country must be a 2-letter ISO code"), 400, request);
   }
 
-  const [providerKey] = configuredProviders();
-  if (!providerKey) {
+  const available = configuredProviders();
+  if (available.length === 0) {
     return createErrorResponse(
       new Error("No bank data provider is configured on this instance"),
       503,
+      request,
+    );
+  }
+
+  // Explicit, and validated against the configured set. This used to be
+  // `const [providerKey] = configuredProviders()` — first-wins, so on an instance with two
+  // providers the picker's choice was discarded in favour of whichever sorted first.
+  // Defaulting to the only one keeps single-provider callers working unchanged.
+  const requested = request.nextUrl.searchParams.get("provider")?.trim().toLowerCase();
+  const providerKey = requested ?? available[0];
+  if (!available.includes(providerKey)) {
+    return createErrorResponse(
+      new Error("That bank data provider is not available on this instance"),
+      400,
       request,
     );
   }

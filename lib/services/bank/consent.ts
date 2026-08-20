@@ -75,11 +75,26 @@ export interface StartedConsent {
  */
 export async function startConsent(
   userId: string,
-  input: { country: string; institutionId: string; institutionName: string },
+  input: {
+    country: string;
+    institutionId: string;
+    institutionName: string;
+    /** Which provider to consent through. Required once an instance can have more than one. */
+    providerKey: string;
+  },
 ): Promise<StartedConsent> {
-  const [providerKey] = configuredProviders();
-  if (!providerKey) {
+  const available = configuredProviders();
+  if (available.length === 0) {
     throw new ConsentFlowError("No bank data provider is configured on this instance", 503);
+  }
+
+  // Validated against the configured set rather than taken on trust, and rather than the
+  // `const [providerKey] = configuredProviders()` this used to do — first-wins silently ignored
+  // the caller's choice, so on an instance with two providers the picker would send you to
+  // whichever sorted first.
+  const providerKey = input.providerKey.trim().toLowerCase();
+  if (!available.includes(providerKey)) {
+    throw new ConsentFlowError("That bank data provider is not available on this instance", 400);
   }
   const provider = getBankProvider(providerKey);
   if (!provider) {
@@ -144,7 +159,11 @@ function referenceMatches(a: string, b: string): boolean {
  *    redirect cannot attach their bank to your account;
  *  - only a `pending_consent` row is accepted, so replaying the URL does nothing.
  */
-export async function completeConsent(userId: string, reference: string): Promise<string> {
+export async function completeConsent(
+  userId: string,
+  reference: string,
+  callbackParams: Readonly<Record<string, string>> = {},
+): Promise<string> {
   if (!reference) {
     throw new ConsentFlowError("Missing consent reference");
   }
@@ -166,16 +185,19 @@ export async function completeConsent(userId: string, reference: string): Promis
     // another account — distinguishing them would confirm a valid reference to whoever guessed it.
     throw new ConsentFlowError("This bank connection request is no longer valid", 404);
   }
-  if (!connection.consentId) {
-    throw new ConsentFlowError("This connection never reached the bank. Start again.", 409);
-  }
-
   const provider = getProviderForConnection(connection.provider);
   if (!provider) {
     throw new ConsentFlowError("Bank provider unavailable", 503);
   }
 
-  const accounts = await provider.completeConsent(connection.consentId);
+  // No `consentId` check here any more. It used to reject a connection without one as "never
+  // reached the bank", which was true for a provider that mints its id at consent-start — and
+  // wrong for one that returns only a URL and mints the id in exchange for a callback code.
+  // Whether the pieces are sufficient is the adapter's question, so it is asked there.
+  const accounts = await provider.completeConsent({
+    providerRef: connection.consentId,
+    callbackParams,
+  });
   await persistAccounts(userId, connection.id, accounts);
 
   await prisma.bankConnection.update({

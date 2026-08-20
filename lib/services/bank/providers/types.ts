@@ -21,7 +21,7 @@ import type { BankCsvRow } from "../csv";
 
 /** A bank the provider can connect to, for the institution picker. */
 export interface Institution {
-  /** Provider-scoped id, e.g. GoCardless's "BANCOBPI_BBPIPTPL". */
+  /** Provider-scoped id, opaque to everything outside the adapter that issued it. */
   id: string;
   name: string;
   /** ISO-3166 alpha-2, upper case. */
@@ -50,8 +50,15 @@ export interface ConsentRequest {
 }
 
 export interface ConsentLink {
-  /** The provider's own id for this consent, persisted as `BankConnection.consentId`. */
-  providerRef: string;
+  /**
+   * The provider's own id for this consent, persisted as `BankConnection.consentId`.
+   *
+   * Nullable because not every provider has one to give yet. Some mint the id when consent
+   * STARTS and hand it over here; others return only a URL and mint the id when the user comes
+   * back, in exchange for a code on the redirect. Requiring an id at this point would rule the
+   * second shape out.
+   */
+  providerRef: string | null;
   /** Where to send the user to authenticate with their bank. */
   url: string;
   /** When the consent lapses and the user must re-authorise. Null when the provider does not say. */
@@ -86,6 +93,30 @@ export interface BankDataProvider {
   /** Stable key; `BankConnection.provider` is stored as `psd2_<key>`. */
   key: string;
 
+  /** Name for the picker, shown only when an instance has more than one provider. */
+  displayName: string;
+
+  /**
+   * Whether this instance holds usable credentials for this provider.
+   *
+   * Lives on the provider because the registry used to name one key and return `false` for
+   * every other — so a second adapter could be registered, resolved and fully credentialled, and
+   * still never be offered, with no error anywhere to say why. Registering a provider is now the
+   * only step needed to make it available.
+   */
+  isConfigured(): boolean;
+
+  /**
+   * Provider reads allowed per connection per day, enforced by `sync.ts` BEFORE a call is spent.
+   *
+   * This is a commercial term, not a property of open banking, so it belongs to the adapter that
+   * knows it. It was a module-level `DAILY_SYNC_BUDGET = 4` justified entirely by one provider's
+   * free tier — a rule that would have outlived the vendor that explained it.
+   *
+   * Under-syncing costs a delay; over-syncing can cost a whole day of 429s. Be conservative.
+   */
+  dailyReadBudget: number;
+
   /** Banks available in a country, for the picker. */
   listInstitutions(country: string): Promise<Institution[]>;
 
@@ -94,9 +125,22 @@ export interface BankDataProvider {
 
   /**
    * Finish consent and list the accounts it granted.
+   *
+   * Takes BOTH what we stored at consent-start and what the bank put on the redirect, because
+   * providers split the necessary information differently: one finishes from an id it gave us
+   * up front, another needs a single-use `code` that only exists on the callback. Handing over
+   * both, and letting the adapter take what it needs, is what stops the shape of one provider's
+   * flow from being baked into the service layer.
+   *
+   * `callbackParams` is every query parameter the redirect carried, unfiltered — the route does
+   * not get to decide which ones matter.
+   *
    * Throws `ConsentExpiredError` if the user abandoned or the bank refused.
    */
-  completeConsent(providerRef: string): Promise<ProviderAccount[]>;
+  completeConsent(input: {
+    providerRef: string | null;
+    callbackParams: Readonly<Record<string, string>>;
+  }): Promise<ProviderAccount[]>;
 
   /**
    * Transactions for one account, in the shape the import pipeline already consumes.

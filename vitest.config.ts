@@ -49,10 +49,10 @@ export default defineConfig({
         // pattern, so the previous `global: { ... }` wrapper (the Vitest 0.x/Jest shape)
         // matched no files and silently enforced nothing — coverage sat at 48% against a
         // notional 70% for as long as it was written that way.
-        statements: 49,
-        branches: 36,
-        functions: 35,
-        lines: 51,
+        statements: 52,
+        branches: 39,
+        functions: 38,
+        lines: 54,
       },
     },
   },

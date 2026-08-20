@@ -53,6 +53,13 @@ export const bankConnectSchema = z.object({
     .transform((v) => v.toUpperCase()),
   institutionId: z.string().min(1).max(120),
   institutionName: z.string().min(1).max(200),
+  // Which provider to consent through. Validated against the instance's configured set in
+  // `startConsent`, never trusted from the body — this only bounds the shape.
+  providerKey: z
+    .string()
+    .min(1)
+    .max(40)
+    .regex(/^[a-z0-9_-]+$/i, "providerKey must be alphanumeric"),
 });
 
 export type BankConnectInput = z.infer<typeof bankConnectSchema>;

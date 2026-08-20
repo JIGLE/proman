@@ -35,15 +35,27 @@ import { defaultSettings, type BillingInfo, type UserSettings } from "./settings
  * hosts Account, but a tenant has no tax rules, integrations or billing to configure.
  */
 const SECTIONS = [
-  { id: "account", roles: ["owner", "tenant"] },
-  { id: "appearance", roles: ["owner", "tenant"] },
-  { id: "security", roles: ["owner", "tenant"] },
-  { id: "tax", roles: ["owner"] },
-  { id: "notifications", roles: ["owner"] },
-  { id: "integrations", roles: ["owner"] },
-  { id: "system", roles: ["owner"] },
-  { id: "billing", roles: ["owner"] },
-] as const satisfies readonly { id: string; roles: readonly PortalRole[] }[];
+  // Grouped by whose settings they are, which is the split every settings screen worth copying
+  // uses: what belongs to YOU, what belongs to the BUSINESS you run in here, and what belongs to
+  // the INSTANCE. Eight equal-weight entries in arrival order made a reader scan all eight to
+  // find one; three short groups make most lookups stop at the heading.
+  { id: "account", group: "personal", roles: ["owner", "tenant"] },
+  { id: "security", group: "personal", roles: ["owner", "tenant"] },
+  { id: "appearance", group: "personal", roles: ["owner", "tenant"] },
+  { id: "notifications", group: "personal", roles: ["owner"] },
+  { id: "tax", group: "workspace", roles: ["owner"] },
+  { id: "billing", group: "workspace", roles: ["owner"] },
+  { id: "integrations", group: "system", roles: ["owner"] },
+  { id: "system", group: "system", roles: ["owner"] },
+] as const satisfies readonly {
+  id: string;
+  group: SectionGroup;
+  roles: readonly PortalRole[];
+}[];
+
+/** Group order is the render order. A group with no visible sections renders nothing. */
+const GROUPS = ["personal", "workspace", "system"] as const;
+type SectionGroup = (typeof GROUPS)[number];
 
 type SectionValue = (typeof SECTIONS)[number]["id"];
 
@@ -70,9 +82,16 @@ export function SettingsView(): React.ReactElement {
   const showBilling = billing?.billingEnabled === true;
 
   const role = getPortalRoleFromSessionRole(session?.user?.role);
-  const sections: readonly SectionValue[] = SECTIONS.filter(
+  const visible = SECTIONS.filter(
     (s) => (s.roles as readonly PortalRole[]).includes(role) && (s.id !== "billing" || showBilling),
-  ).map((s) => s.id);
+  );
+  const sections: readonly SectionValue[] = visible.map((s) => s.id);
+  // Groups that actually have something in them for this role. A tenant sees only "personal",
+  // and an empty heading is worse than no heading.
+  const groupedSections = GROUPS.map((group) => ({
+    group,
+    ids: visible.filter((s) => s.group === group).map((s) => s.id),
+  })).filter((g) => g.ids.length > 0);
 
   // A `?tab=` the current role can't see (a stale link, or an owner URL opened by a tenant)
   // falls back to the first section rather than rendering an empty panel.
@@ -197,27 +216,32 @@ export function SettingsView(): React.ReactElement {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
+      <div className="grid gap-6 md:grid-cols-[clamp(180px,16vw,260px)_minmax(0,1fr)]">
         {/* Desktop vertical section nav — same left-border-accent language as
             the main sidebar, so Settings reads as its own mini nav rather
             than a page of tabs. */}
         <nav aria-label={t("sectionsLabel")} className="hidden md:block">
-          <div className="space-y-0.5">
-            {sections.map((section) => (
-              <button
-                key={section}
-                type="button"
-                onClick={() => setActiveSection(section)}
-                aria-current={visibleSection === section ? "page" : undefined}
-                className={cn(
-                  "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
-                  visibleSection === section
-                    ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)] font-medium text-[var(--country-highlight-readable)]"
-                    : "border-transparent text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
-                )}
-              >
-                {sectionLabel(section)}
-              </button>
+          <div className="space-y-4">
+            {groupedSections.map(({ group, ids }) => (
+              <div key={group} className="space-y-0.5">
+                <h3 className="mono-label px-3 pb-1">{t(`groups.${group}`)}</h3>
+                {ids.map((section) => (
+                  <button
+                    key={section}
+                    type="button"
+                    onClick={() => setActiveSection(section)}
+                    aria-current={visibleSection === section ? "page" : undefined}
+                    className={cn(
+                      "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
+                      visibleSection === section
+                        ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)] font-medium text-[var(--country-highlight-readable)]"
+                        : "border-transparent text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
+                    )}
+                  >
+                    {sectionLabel(section)}
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
         </nav>

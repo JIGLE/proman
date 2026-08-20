@@ -224,11 +224,11 @@ movement through allocation to rent-period status.
 ## External integrations — honest status
 
 ```
-Bank:        LIVE where a bank has been connected — PSD2 account information
-             (GoCardless). Simulated / CSV-only where none is. Provider
-             abstraction: VERIFIED — lib/services/bank/providers/ with a
-             registry, and importBankRows takes a target so a synced movement
-             uses the same pipeline as an uploaded one.
+Bank:        CSV import only — no PSD2 adapter ships. Provider abstraction:
+             VERIFIED — lib/services/bank/providers/ holds the contract and a
+             registry, exercised by a fake provider rather than a vendor, and
+             importBankRows takes a target so a synced movement would use the
+             same pipeline as an uploaded one.
 
 Portugal:    Sandbox / review / preparation only. No live AT endpoint.
              Enforced: pt-at.ts calls refuseUnsupportedMode (D1 closed).

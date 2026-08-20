@@ -281,10 +281,10 @@ Rationale in `V1_READINESS.md` §D3.
 ## Integration status — as it must be reported
 
 ```
-Bank:      LIVE where the user has connected one — PSD2 account information
-           (GoCardless). Simulated / CSV-only where they have not. Never
-           asserted: read it from the "Signed-in account" and "Bank movements"
-           checks on /admin, which derive it from the connection rows.
+Bank:      CSV import only — no PSD2 adapter ships, so the registry is empty
+           and no connect button renders. Never asserted: read it from the
+           "Bank movements" check on /admin, which derives it from the
+           connection rows and the registered providers.
 Portugal:  Sandbox / review / preparation only. No live AT endpoint.
            Connector refuses and logs in any other mode.
 Spain:     Sandbox / review / preparation only. No live MITMA endpoint.

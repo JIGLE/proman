@@ -9,7 +9,7 @@ import { logger } from "@/lib/utils/logger";
 export const runtime = "nodejs";
 
 /**
- * GET /api/bank/connections/callback?ref=… — where the bank sends the user back.
+ * GET /api/bank/connections/callback?state=… — where the bank sends the user back.
  *
  * This is a browser redirect, not an API call, so it answers with a redirect rather than JSON:
  * the person arriving here is looking at a page, and a JSON body would strand them on it.
@@ -25,10 +25,16 @@ async function handleGet(request: NextRequest): Promise<Response> {
   if (authResult instanceof Response) return authResult;
   const { scopeUserId } = authResult;
 
-  const reference = request.nextUrl.searchParams.get("ref") ?? "";
+  // `state` first: it is the standard name for the value a redirect flow echoes back, and it is
+  // what we put our nonce in. `ref` stays as a fallback for a provider that names it that way.
+  const params = Object.fromEntries(request.nextUrl.searchParams.entries());
+  const reference = params.state ?? params.ref ?? "";
 
   try {
-    await completeConsent(scopeUserId, reference);
+    // Everything the redirect carried goes through. This route used to read one parameter and
+    // discard the rest, which silently ruled out any provider whose consent completes by
+    // exchanging a single-use `code` that only exists here.
+    await completeConsent(scopeUserId, reference, params);
     settings.searchParams.set("bank", "connected");
   } catch (error) {
     // The reason is deliberately not put in the URL: these messages are the same for an unknown,

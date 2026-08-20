@@ -96,23 +96,84 @@ the header is ignored entirely. Getting it wrong lets a caller pick their own ra
 > availability from `ENABLE_DEMO_LOGIN` on the server per request, so one variable controls both
 > the form and the provider. Remove it if it is still set.
 
-## Connecting a bank (optional)
+## Bank movements
 
-Without credentials the app imports movements from a CSV you export from your bank, and Settings
-› Integrations shows no connect button — deliberately, since a button that can only fail is worse
-than none. To connect a bank directly instead:
+Two ways in, and the pipeline downstream is identical either way — an imported movement gets the
+same fingerprint dedupe, reconciliation rules, confidence scoring and 0.85 auto-allocation
+threshold a synced one does.
 
-1. Create free credentials at <https://bankaccountdata.gocardless.com/user-secrets/>. GoCardless
-   holds the AISP licence, so this instance needs none of its own.
-2. Register `https://<your-host>/api/bank/connections/callback` as a redirect URI with them. It
-   must match `NEXTAUTH_URL` exactly, or the bank refuses to return the user.
-3. Set `GOCARDLESS_SECRET_ID` and `GOCARDLESS_SECRET_KEY`, then restart.
-4. Settings › Integrations → **Connect a bank**. You are sent to your own bank to authorise
-   read-only access; Situs never sees your banking password.
+**CSV import** works with no setup at all: Finance › Bank Movements, upload a statement exported
+from your bank.
 
-Reads are capped at roughly **4 per account per day** on the free tier, and the provider answers
-429 for the rest of the day once that is passed. The app enforces the budget itself and shows
-what is left, so "Sync now" refuses rather than burning the allowance.
+**A live connection** uses [Enable Banking](https://enablebanking.com/docs/), who hold the AISP
+licence — so this instance needs no PSD2 licence and no eIDAS certificate of its own. Their
+**restricted production** mode is free and limited to accounts you whitelist as yours, which is
+exactly the self-hosted case; their paid tiers are for products aggregating other people's accounts.
+
+1. Register an application in their Control Panel. **Start with a Sandbox one** — it activates
+   automatically and connects to bank sandboxes, so the whole flow can be exercised before any real
+   account is involved. Create a Production application afterwards.
+2. Save the RSA private key it generates. You are offered it once.
+3. Add this exact URL to the application's allowed redirect URLs:
+   `https://<your-host>/api/bank/connections/callback`. It must match `NEXTAUTH_URL`, because
+   Enable Banking validates the redirect against that list rather than accepting whatever is sent.
+4. For a Production application, whitelist your own accounts to activate restricted mode.
+5. Set `ENABLE_BANKING_APPLICATION_ID`, and give the app the key **as a file** (see below), then
+   restart.
+6. Settings › Integrations → **Connect a bank**. You authorise at your own bank; Situs never sees
+   your banking password.
+
+### The private key goes in a file, not an environment variable
+
+TrueNAS caps an app-config value at **1,000 characters**. An RSA-2048 PEM is around 1,700, and
+base64-encoding it makes it ~2,272 — so there is no encoding that fits. Mount it instead, which is
+what you would want anyway: an environment variable holding a private key is readable from
+`/proc/<pid>/environ`, shows up in process listings and crash dumps, and is echoed by any diagnostic
+that prints the environment. A file with `0400` is none of those.
+
+1. Put the `.pem` somewhere on the host the app can reach, e.g. `/mnt/tank/situs/secrets/app.pem`,
+   owned by the app's user and `chmod 400`.
+2. In the custom app's **Storage** section add a host-path volume, **read-only**:
+   host `/mnt/tank/situs/secrets` → container `/app/secrets`.
+3. Set `ENABLE_BANKING_PRIVATE_KEY_FILE=/app/secrets/app.pem`.
+
+Leave `ENABLE_BANKING_PRIVATE_KEY` unset. If both are set the file wins, but a leftover inline value
+is exactly the sort of thing that later produces an unexplained 401.
+
+If the path cannot be read, the app says so and names the path rather than quietly reporting "no
+bank provider configured" — a misconfigured instance and a deliberately CSV-only one must not look
+the same. And if you ever see `DECODER routines::unsupported`, that is a PEM whose newlines were
+lost on the way into a single-line field; the file route avoids it entirely.
+
+To confirm the credentials and record what the API actually returns:
+
+```bash
+ENABLE_BANKING_APPLICATION_ID=… ENABLE_BANKING_PRIVATE_KEY="$(cat <app-id>.pem)" \
+  node scripts/enablebanking-check.mjs --country PT
+```
+
+It redacts IBANs, names, amounts and tokens before printing, so the output is safe to share. The
+transaction shape it records is the one part of the adapter not yet verified against a real
+response.
+
+### What this instance actually needs
+
+Worth knowing before signing up for anything: almost every external service is optional, and a
+self-hosted instance collecting rent by bank transfer needs none of them.
+
+| Service        | Required? | What it is for                                                                                                                               |
+| -------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enable Banking | optional  | live bank movements. Unset, CSV import covers it                                                                                             |
+| Stripe         | optional  | collecting rent by card/SEPA, and subscription billing. Unset, the payment routes answer "not configured" and plan limits are never enforced |
+| SendGrid       | optional  | outbound email. Unset, email is simply not sent                                                                                              |
+| Redis          | optional  | caching                                                                                                                                      |
+| Google OAuth   | optional  | sign-in. Credentials sign-in works without it                                                                                                |
+
+Required in every case: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, and
+`PII_ENCRYPTION_KEY` in production.
+
+Reads are capped per connection per day and the app enforces that budget itself, showing what is
+left, so "Sync now" refuses rather than burning the allowance.
 
 For the daily automatic sync, set `CRON_SECRET` and point a scheduler at the endpoint once a day:
 

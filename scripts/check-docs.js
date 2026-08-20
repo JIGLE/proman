@@ -61,6 +61,25 @@ const RETIRED_CLAIMS = [
       "find-my-way was fixed by an overrides entry; the audit allowlist that carried this " +
       "advisory is gone from security-scan.yml, and it swallowed a real finding before it went",
   },
+  {
+    // The subdomain token, not the full host `bankaccountdata.gocardless.com`. CodeQL flagged
+    // that form as `js/incomplete-hostname-regexp` (High) — right about the shape, wrong about
+    // the use, since this greps prose rather than validating a URL. Rather than suppress the
+    // rule, drop the shape: nothing but that dashboard is ever written as one word, so the token
+    // catches the bare host and any URL around it. Deliberately NOT widened to the spaced form
+    // "Bank Account Data" — that is the product's name, and CLAUDE.md is entitled to use it in
+    // the sentence recording why the adapter was removed.
+    pattern: /bankaccountdata/i,
+    retired: "2026-08-20",
+    because:
+      "GoCardless closed Bank Account Data to new signups in July 2025, so telling an operator " +
+      "to create credentials there sends them somewhere they cannot sign up",
+  },
+  {
+    pattern: /connect a bank.{0,40}gocardless|gocardless.{0,40}connect a bank/i,
+    retired: "2026-08-20",
+    because: "the adapter was removed; the registry ships empty and CSV import is the path",
+  },
 ];
 
 /** Lines allowed to mention a retired claim, because they are the record of its retirement. */

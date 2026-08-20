@@ -90,7 +90,12 @@
       "loadFailed": "Não foi possível carregar as definições.",
       "toastCanceled": "Pagamento cancelado",
       "toastSaveFailed": "Não foi possível guardar as definições.",
-      "appearance": "Aparência"
+      "appearance": "Aparência",
+      "groups": {
+        "personal": "Pessoal",
+        "workspace": "Espaço de trabalho",
+        "system": "Sistema"
+      }
     },
     "panel": {
       "accountInfo": "Informação da conta",
@@ -226,7 +231,6 @@
       "nhrDisabledByIfici": "O RNH não está disponível com o IFICI ativo — só um pode aplicar-se de cada vez.",
       "ificiDisabledByNhr": "O IFICI não está disponível com o RNH ativo — só um pode aplicar-se de cada vez.",
       "bankConnectCta": "Ligar um banco",
-      "bankNotConfigured": "Esta instância não tem credenciais de fornecedor bancário, pelo que os movimentos só podem ser importados de um ficheiro.",
       "bankPickerTitle": "Ligar um banco",
       "bankPickerHelp": "Será encaminhado para o seu banco para autorizar o acesso apenas de leitura à sua conta. O Situs nunca vê a sua senha bancária.",
       "bankCountryLabel": "País",
@@ -253,7 +257,10 @@
       "bankCountry": {
         "PT": "Portugal",
         "ES": "Espanha"
-      }
+      },
+      "bankNoProviderTitle": "Ligação bancária não configurada",
+      "bankNoProviderBody": "Esta instância não tem credenciais Enable Banking, por isso os movimentos não podem ser importados automaticamente. Defina ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY e reinicie.",
+      "bankNoProviderCsv": "Entretanto a importação CSV funciona, em Finanças › Movimentos Bancários — a correspondência, os recibos e o livro de rendas comportam-se exatamente da mesma forma."
     }
   },
   "gdpr": {

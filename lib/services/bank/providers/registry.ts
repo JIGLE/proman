@@ -1,19 +1,26 @@
 import type { BankDataProvider } from "./types";
-import { goCardlessProvider, isGoCardlessConfigured } from "./gocardless";
+import { enableBankingProvider } from "./enablebanking";
 
 /**
  * Provider key → bank data provider.
  *
  * Mirrors `lib/tax/connectors/registry.ts`, and exists for the same reason: so no domain service
- * names a specific vendor. `sync.ts` and the API routes resolve through here, so a second provider
+ * names a specific vendor. `sync.ts` and the API routes resolve through here, so adding a provider
  * is a registration rather than a rewrite.
  *
  * `BankConnection.provider` stores `psd2_<key>` — the prefix distinguishes a live provider
  * connection from the `manual` and `csv` rows the import pipeline find-or-creates, which matters
  * because those two must never be offered a sync button or counted as a live feed.
+ *
+ * Registration is not configuration: an adapter listed here is still only OFFERED once it reports
+ * `isConfigured()`, so an instance with no credentials sees the CSV-only view rather than a connect
+ * button that can only fail.
+ *
+ * Everything downstream of this map — consent, sync, the budget, the encrypted IBAN at rest — is
+ * provider-agnostic and covered by tests that use a fake provider rather than a vendor.
  */
 const PROVIDERS: Record<string, BankDataProvider> = {
-  gocardless: goCardlessProvider,
+  enablebanking: enableBankingProvider,
 };
 
 /** Prefix marking a connection as belonging to a real provider rather than manual/CSV import. */
@@ -43,12 +50,30 @@ export function getProviderForConnection(column: string): BankDataProvider | und
 /**
  * Provider keys this instance has credentials for.
  *
- * Registration and configuration are different questions: the code ships with GoCardless
- * registered, but a self-hosted instance with no secrets must not be offered a connect button
- * that can only fail. The UI asks this, not `Object.keys(PROVIDERS)`.
+ * Registration and configuration are different questions: an instance with no secrets must not be
+ * offered a connect button that can only fail. The UI asks this, not `Object.keys(PROVIDERS)`.
+ *
+ * Each provider answers for itself. This used to read
+ * `key === "<one vendor>" ? isThatVendorConfigured() : false`, which meant any second adapter was
+ * hardcoded to unconfigured — registered, resolvable, fully credentialled, and silently never
+ * offered, with nothing anywhere reporting why.
  */
 export function configuredProviders(): string[] {
-  return Object.keys(PROVIDERS)
-    .filter((key) => (key === "gocardless" ? isGoCardlessConfigured() : false))
+  return Object.values(PROVIDERS)
+    .filter((provider) => provider.isConfigured())
+    .map((provider) => provider.key)
     .sort();
+}
+
+/** Registered providers, configured or not — for diagnostics that must not lie by omission. */
+export function registeredProviders(): BankDataProvider[] {
+  return Object.values(PROVIDERS);
+}
+
+/** Exported for tests: register a provider for the duration of a case. */
+export function __registerProviderForTest(provider: BankDataProvider): () => void {
+  PROVIDERS[provider.key] = provider;
+  return () => {
+    delete PROVIDERS[provider.key];
+  };
 }
