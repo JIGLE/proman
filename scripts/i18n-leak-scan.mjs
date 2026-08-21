@@ -55,7 +55,7 @@ await page.locator('input[name="email"]').waitFor({ state: "visible", timeout: 3
 await page.locator('input[name="email"]').fill(EMAIL);
 await page.locator('input[name="password"]').fill(PASSWORD);
 await page.locator('form button[type="submit"]').click();
-await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
+await page.waitForURL((url) => !url.pathname.startsWith("/auth/"), { timeout: 20000 });
 
 async function collect(into) {
   for (const m of (await page.evaluate(() => document.body.innerText)).match(LEAK) || [])

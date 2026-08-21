@@ -20,7 +20,7 @@ test.describe("Dashboard", () => {
     await page.goto("/dashboard");
     await settle(page);
 
-    await expect(page).toHaveURL(/\/en\/dashboard/);
+    await expect(page).toHaveURL((url) => url.pathname === "/dashboard");
     // The app shell must actually render — not merely "some text on the page".
     await expect(page.getByRole("navigation").first()).toBeVisible();
   });
@@ -34,7 +34,7 @@ test.describe("Dashboard", () => {
     await portfolioLink.click();
 
     // Assert the destination, not the word that matched the link.
-    await expect(page).toHaveURL(/\/en\/portfolio/);
+    await expect(page).toHaveURL((url) => url.pathname === "/portfolio");
   });
 
   test("should navigate to People section", async ({ page }) => {
@@ -45,7 +45,7 @@ test.describe("Dashboard", () => {
     await expect(peopleLink).toBeVisible();
     await peopleLink.click();
 
-    await expect(page).toHaveURL(/\/en\/people/);
+    await expect(page).toHaveURL((url) => url.pathname === "/people");
   });
 
   test("should switch language from Settings › Appearance", async ({ page }) => {

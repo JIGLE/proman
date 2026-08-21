@@ -46,8 +46,11 @@ setup("authenticate", async ({ page }) => {
   await page.locator('input[name="password"]').fill(PASSWORD);
   await page.locator('form button[type="submit"]').click();
 
-  // The app serves four locales; the old pattern only matched /en and /pt.
-  await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
+  // URLs no longer carry a locale segment (the proxy rewrites, it does not prefix), so there is
+  // no locale pattern left to match on. What this actually waits for is "the sign-in completed
+  // and we left /auth" — state the destination that way rather than naming one, because a tenant
+  // and an owner land on different pages.
+  await page.waitForURL((url) => !url.pathname.startsWith("/auth/"), { timeout: 20000 });
 
   // Seeding is opt-in. `seedDemoData` deletes and recreates the demo user's records, so it must
   // never fire against a developer's dev.db just because they ran the suite locally. CI sets
