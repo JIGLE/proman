@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils/utils";
  * without the locale prefix being hardcoded anywhere.
  */
 const SECTIONS = [
-  { key: "status", href: "/admin" },
+  { key: "overview", href: "/admin" },
+  { key: "status", href: "/admin/status" },
   { key: "users", href: "/admin/users" },
   { key: "signIn", href: "/admin/sign-in" },
   { key: "metrics", href: "/admin/metrics" },
@@ -31,8 +32,8 @@ export function AdminShellNav() {
   const current = pathname.replace(/\/$/, "") || "/admin";
 
   return (
-    <header className="border-b border-[var(--color-border)] bg-[var(--color-background)]">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 py-3 sm:px-6">
+    <header className="border-b border-[var(--color-inner-border)] bg-[var(--color-surface-solid)]">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 px-4 pt-3 sm:px-6">
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-sm font-semibold text-[var(--color-foreground)]">
             <ShieldCheck className="size-4 text-[var(--semantic-warning-readable)]" aria-hidden />
@@ -47,7 +48,7 @@ export function AdminShellNav() {
           </Link>
         </div>
 
-        <nav aria-label={t("title")} className="flex gap-1 overflow-x-auto">
+        <nav aria-label={t("title")} className="-mb-px flex gap-1 overflow-x-auto">
           {SECTIONS.map((section) => {
             const active = current === section.href;
             return (
@@ -56,10 +57,13 @@ export function AdminShellNav() {
                 href={section.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",
+                  "whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors",
+                  // Was a filled pill in `--color-muted`, which is the same token the bar
+                  // itself now sits on — the active tab would have been invisible against it.
+                  // An underline in the country highlight cannot collide with its own surface.
                   active
-                    ? "bg-[var(--color-muted)] font-medium text-[var(--color-foreground)]"
-                    : "text-muted-foreground hover:text-[var(--color-foreground)]",
+                    ? "border-[var(--country-highlight-readable)] font-medium text-[var(--color-foreground)]"
+                    : "border-transparent text-muted-foreground hover:text-[var(--color-foreground)]",
                 )}
               >
                 {t(`nav.${section.key}`)}

@@ -1,23 +1,25 @@
 import { Suspense } from "react";
 
-import { SystemStatusView } from "@/components/features/admin/system-status-view";
+import { AdminControlCenter } from "@/components/features/admin/control-center/admin-control-center";
 import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Admin › System status.
+ * Admin › Control center.
  *
- * Deliberately renders nothing from AppContext. The page is opened when something is wrong, so
- * it reads `/api/admin/system-status` on its own and is exempt from AppDataGate — a diagnostics
- * screen that fails alongside the thing it diagnoses is not a diagnostics screen.
+ * The instance at a glance: status, access, metrics, accounts and the bank workbench in one view
+ * that does not scroll above `lg`. The tabs remain, and remain the place the full detail lives —
+ * this is the layer above them, so "is anything wrong?" is answerable without visiting four pages.
  *
- * The API enforces the admin role; this page is a shell around it.
+ * Deliberately renders nothing from AppContext, like the status page it grew out of. It is opened
+ * when something is wrong, so it reads the admin APIs on its own and is exempt from AppDataGate.
+ * The APIs enforce the admin role; this page is a shell around them.
  */
 export default function AdminPage() {
   return (
     <Suspense fallback={<GenericPageSkeleton />}>
-      <SystemStatusView />
+      <AdminControlCenter />
     </Suspense>
   );
 }

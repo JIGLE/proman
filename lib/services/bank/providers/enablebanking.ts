@@ -30,6 +30,7 @@ import type {
   ConsentRequest,
   InstitutionListing,
   ProviderAccount,
+  ProviderDiagnostics,
 } from "./types";
 import { ConsentExpiredError } from "./types";
 
@@ -356,6 +357,49 @@ export function mapTransaction(tx: EnableBankingTransaction): BankCsvRow | null 
   };
 }
 
+/**
+ * A call that reports its own failure instead of translating it.
+ *
+ * `apiCall` maps 401/403 to `ConsentExpiredError`, which is right in the sync path — mid-sync,
+ * a refused request almost always means a lapsed consent, and the remedy is to reconnect. It is
+ * exactly wrong for a setup check: at `/application` there is no consent involved, so a 401 means
+ * the key does not match the application id, and telling the operator to reconnect would send
+ * them away from the actual problem.
+ */
+async function probe(
+  path: string,
+): Promise<{ ok: true; body: unknown } | { ok: false; status: number | null; reason: string }> {
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase()}${path}`, {
+      headers: {
+        Authorization: `Bearer ${buildAuthJwt()}`,
+        Accept: "application/json",
+      },
+    });
+  } catch (error) {
+    // A signing failure surfaces here too — `buildAuthJwt` throws when the PEM is unusable, which
+    // is the single most common way this is misconfigured (newlines lost to a one-line field).
+    return {
+      ok: false,
+      status: null,
+      reason: error instanceof EnableBankingConfigError ? error.message : "network_unreachable",
+    };
+  }
+
+  if (!response.ok) {
+    // No body echo, here of all places: an auth failure can quote the request — and so the
+    // signed token — back at us, and this result is rendered in a browser.
+    return { ok: false, status: response.status, reason: `http_${response.status}` };
+  }
+
+  try {
+    return { ok: true, body: await response.json() };
+  } catch {
+    return { ok: false, status: response.status, reason: "malformed_json" };
+  }
+}
+
 export const enableBankingProvider: BankDataProvider = {
   key: "enablebanking",
   displayName: "Enable Banking",
@@ -374,9 +418,10 @@ export const enableBankingProvider: BankDataProvider = {
     }>("/aspsps");
 
     // Everything the application can reach, before the country filter. A sandbox application
-    // returns a handful of Nordic mock banks and a production one not yet activated returns
-    // nothing at all; both used to arrive here as an empty picker reading "no banks available in
-    // this country", which pointed at the country and away from the cause.
+    // returns the Mock ASPSPs its operator configured in the Enable Banking Control Panel — the
+    // set is whatever they made, not a fixed list — and a production application not yet
+    // activated returns nothing at all. Both used to arrive here as an empty picker reading "no
+    // banks available in this country", which pointed at the country and away from the cause.
     const all = body.aspsps ?? [];
 
     return {
@@ -497,5 +542,73 @@ export const enableBankingProvider: BankDataProvider = {
     } while (continuationKey);
 
     return rows;
+  },
+
+  /**
+   * Read-only. Two calls, both GET, neither of which grants or spends anything: `/application`
+   * says who we are and where the provider will redirect back to, `/aspsps` says what we can
+   * reach. Between them they separate the four failure modes that all looked like "empty picker".
+   */
+  async diagnose(expectedRedirectUrl: string | null): Promise<ProviderDiagnostics> {
+    const base: ProviderDiagnostics = {
+      configured: isEnableBankingConfigured(),
+      authenticated: null,
+      authError: null,
+      applicationName: null,
+      environment: null,
+      redirectUrls: [],
+      expectedRedirectUrl,
+      redirectUrlRegistered: null,
+      institutionsTotal: null,
+      institutionsByCountry: [],
+    };
+
+    if (!base.configured) return base;
+
+    const app = await probe("/application");
+    if (!app.ok) {
+      return { ...base, authenticated: false, authError: app.reason };
+    }
+
+    const body = app.body as {
+      name?: string;
+      environment?: string;
+      redirect_urls?: string[];
+      active?: boolean;
+    };
+    const redirectUrls = Array.isArray(body.redirect_urls) ? body.redirect_urls : [];
+
+    const result: ProviderDiagnostics = {
+      ...base,
+      authenticated: true,
+      applicationName: body.name ?? null,
+      environment: body.environment ?? null,
+      redirectUrls,
+      // Compared exactly, because that is how the provider compares it. A trailing slash or an
+      // http/https mismatch is a real mismatch and the operator needs to see which.
+      redirectUrlRegistered: expectedRedirectUrl
+        ? redirectUrls.includes(expectedRedirectUrl)
+        : null,
+    };
+
+    const aspsps = await probe("/aspsps");
+    if (!aspsps.ok) return result;
+
+    const list = ((aspsps.body as { aspsps?: { country?: string }[] }).aspsps ?? []).filter(
+      Boolean,
+    );
+    const counts = new Map<string, number>();
+    for (const entry of list) {
+      const country = (entry.country ?? "??").toUpperCase();
+      counts.set(country, (counts.get(country) ?? 0) + 1);
+    }
+
+    return {
+      ...result,
+      institutionsTotal: list.length,
+      institutionsByCountry: [...counts.entries()]
+        .map(([country, count]) => ({ country, count }))
+        .sort((a, b) => b.count - a.count || a.country.localeCompare(b.country)),
+    };
   },
 };

@@ -34,6 +34,10 @@ const { prismaMock, store, resetStore } = vi.hoisted(() => {
   const prismaMock = {
     bankConnection: {
       findFirst: vi.fn(async () => ({ id: "conn-1" })),
+      // `importBankRows` reads the connection's metadata to decide whether these rows may cross
+      // the allocation boundary — a test connection imports but never auto-allocates. An ordinary
+      // import has no marker, so: no metadata.
+      findUnique: vi.fn(async (): Promise<{ metadata: string | null }> => ({ metadata: null })),
       create: vi.fn(),
       update: vi.fn(),
     },
@@ -170,6 +174,60 @@ describe("importBankRows — re-importing the same statement", () => {
 
     expect(allocateReceiptMock).toHaveBeenCalledTimes(1);
     expect(prismaMock.receipt.create).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * The allocation boundary a test connection may not cross.
+ *
+ * A connection made from /admin to prove the chain works runs the identical pipeline — same
+ * fingerprint dedupe, same reconciliation rules, same confidence scoring — because a test that
+ * took a different path would prove nothing about the path that matters. The one thing it must
+ * not do is auto-create a `Receipt` and allocate it against a REAL lease out of sandbox money.
+ *
+ * That is not a tidiness rule. Deleting the connection afterwards cascades to `BankAccount` and
+ * `BankTransaction` but NOT to `Receipt` (schema.prisma: the receipt relation is SetNull on the
+ * transaction side), so an allocated test row would strand a receipt and its `PaymentAllocation`
+ * rows in the ledger with no movement behind them — money that cannot be traced and was never
+ * real. The quarantine is what makes the delete safe.
+ *
+ * The fixture below is the same one that auto-matches in the suite above, so if the quarantine
+ * were dropped these assertions would fail rather than pass vacuously.
+ */
+describe("importBankRows — a test connection never allocates", () => {
+  beforeEach(() => {
+    prismaMock.bankConnection.findUnique.mockResolvedValue({
+      metadata: JSON.stringify({ reference: "abc", isTest: true }),
+    });
+  });
+
+  it("imports the row but leaves it for review instead of creating a receipt", async () => {
+    const summary = await importBankRows(USER_ID, [rentRow]);
+
+    // It still imported — the point is to exercise the pipeline, not to skip it.
+    expect(summary.imported).toBe(1);
+
+    // And it did not cross the boundary.
+    expect(summary.autoMatched).toBe(0);
+    expect(prismaMock.receipt.create).not.toHaveBeenCalled();
+    expect(allocateReceiptMock).not.toHaveBeenCalled();
+
+    const written = prismaMock.bankTransaction.create.mock.calls[0][0].data;
+    expect(written.status).toBe("needs_review");
+  });
+
+  it("still records the confidence it would have matched on", async () => {
+    // The evidence is the deliverable: an operator needs to see that the chain scored this row
+    // at auto-match confidence, which is precisely what proves the sync works. Suppressing the
+    // score along with the allocation would throw away the result of the test.
+    await importBankRows(USER_ID, [rentRow]);
+
+    const written = prismaMock.bankTransaction.create.mock.calls[0][0].data;
+    expect(written.suggestedLeaseId).toBe(LEASE_ID);
+    expect(written.matchConfidence).toBeGreaterThanOrEqual(0.85);
+    expect(JSON.parse(written.matchReasons as string).warnings).toContain(
+      "test_connection_not_allocated",
+    );
   });
 });
 

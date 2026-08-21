@@ -199,14 +199,17 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  // ── Handle /demo entry point ────────────────────────────────────────
-  if (pathname === "/demo") {
-    const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}/demo`;
-    const response = NextResponse.redirect(url);
-    applySecurityHeaders(response, nonce);
-    return response;
-  }
+  // ── /demo needs no handling any more ────────────────────────────────
+  //
+  // It used to redirect to `/${defaultLocale}/demo`, which was right while pages lived at
+  // prefixed URLs. Once the prefix left the address bar that became an infinite loop: this hop
+  // sent `/demo` to `/pt/demo`, and the back-compat rule at the bottom of this file 308s any
+  // prefixed URL to its unprefixed form — straight back to `/demo`. Every entry point into demo
+  // mode (the landing hero, the PWA welcome screen, the sign-in page) dead-ended in
+  // ERR_TOO_MANY_REDIRECTS.
+  //
+  // Nothing replaces it. `/demo` is already the address the app serves, and the rewrite at the
+  // bottom routes it to `app/[locale]/demo` internally, which is all the old redirect was for.
 
   // ── Legacy property payment path redirects ──────────────────────────
   const legacyPropertyPaymentMatch = pathname.match(

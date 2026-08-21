@@ -34,8 +34,11 @@ export function AdminSignInView() {
   useEffect(() => {
     void (async () => {
       try {
-        const body = await apiFetch<{ data?: SignInStatus }>("/api/admin/sign-in-status");
-        setStatus(body?.data ?? null);
+        // Same double-unwrap as the accounts list had: `apiFetch` returns the envelope's
+        // `data` already, so `body.data` was always undefined and this page rendered its
+        // "could not load" state on every visit, whatever the server actually answered.
+        const body = await apiFetch<SignInStatus>("/api/admin/sign-in-status");
+        setStatus(body ?? null);
       } catch {
         setError(true);
       } finally {
