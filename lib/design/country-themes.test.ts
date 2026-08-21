@@ -146,6 +146,33 @@ describe("resolveThemeVars", () => {
     }
   });
 
+  /**
+   * `--color-muted` used to receive `theme.muted`, which is a mid-tone TEXT colour — so the
+   * surface token and the foreground token resolved to the same value (PT dark: both #A5B8A9),
+   * i.e. 1:1 contrast. Every muted surface in the app rendered as a mid-tone slab and any muted
+   * text on it was invisible. Nothing caught it because no test compared the pair.
+   *
+   * These two assertions are that comparison. The first fails outright on the old mapping; the
+   * second guards the correction that keeps the table's raw values from undershooting AA.
+   */
+  it.each(COUNTRY_CODES)("%s muted text is readable on the muted surface", (code) => {
+    for (const mode of MODES) {
+      const vars = resolveThemeVars(code, mode);
+      expect(
+        vars["--color-muted-foreground"],
+        `${code}/${mode}: muted surface and muted text must not be the same colour`,
+      ).not.toBe(vars["--color-muted"]);
+      expect(
+        contrastRatio(vars["--color-muted-foreground"], vars["--color-muted"]),
+        `${code}/${mode}: muted text on muted surface`,
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(vars["--color-muted-foreground"], vars["--color-canvas"]),
+        `${code}/${mode}: muted text on canvas`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it("keyline flips with logo canvas darkness", () => {
     expect(resolveThemeVars("PT", "normal")["--logo-keyline"]).toBe("rgba(0,0,0,0.48)");
     expect(resolveThemeVars("PT", "dark")["--logo-keyline"]).toBe("rgba(255,255,255,0.68)");

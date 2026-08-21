@@ -521,7 +521,21 @@ export function resolveThemeVars(country: CountryCode, mode: ThemeMode): Record<
     "--color-canvas": theme.canvas,
     "--color-surface": theme.surface,
     "--color-surface-solid": theme.surfaceSolid,
-    "--color-muted": theme.muted,
+    // `theme.muted` is a mid-tone TEXT colour (PT dark is #A5B8A9), but `--color-muted` is a
+    // SURFACE token — all 34 of its uses in the app are `bg-`/`backgroundColor`, none is text.
+    // Writing the text colour into it painted every muted surface a mid-tone sage: badges,
+    // progress tracks, skeletons, the command palette, and most visibly the `/admin` shell,
+    // whose page background is this token. It also put `--color-muted-foreground` (the same
+    // #A5B8A9, from globals.css) directly on top of itself, i.e. 1:1 contrast — invisible text.
+    //
+    // The surface belongs to `surfaceSolid`, which is what globals.css already defines
+    // `--color-muted` as for the default country, and the text colour belongs to the
+    // foreground token, which nothing was setting per country at all.
+    "--color-muted": theme.surfaceSolid,
+    // Corrected against the muted SURFACE rather than the canvas: it is the tighter of the two
+    // backgrounds this text lands on, and the table's raw values sit at 4.15–4.44:1 on the light
+    // themes — below AA, and below the 4.89:1 the hand-tuned globals.css value already reached.
+    "--color-muted-foreground": readableHighlight(theme.muted, theme.surfaceSolid),
     "--color-border": theme.border,
     "--color-hover": theme.hover,
     "--ui-accent": theme.accent,
