@@ -60,6 +60,10 @@ export const bankConnectSchema = z.object({
     .min(1)
     .max(40)
     .regex(/^[a-z0-9_-]+$/i, "providerKey must be alphanumeric"),
+  // Marks the resulting connection as a deliberate test run. It changes nothing about the
+  // consent — same provider, same flow, same code path, which is the entire point of testing
+  // with it — only how the connection is labelled and that it can be deleted from /admin.
+  isTest: z.boolean().optional(),
 });
 
 export type BankConnectInput = z.infer<typeof bankConnectSchema>;

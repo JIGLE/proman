@@ -73,6 +73,9 @@ export type AuditAction =
   | "APPLY_RECONCILIATION_RULE"
   // Live bank connection (PSD2 account information)
   | "BANK_CONNECTION_CREATED"
+  // Only a connection marked as a test can be deleted, so this action always describes a
+  // discarded test run — never the removal of a bank someone relies on.
+  | "BANK_CONNECTION_DELETED"
   | "BANK_CONSENT_GRANTED"
   | "BANK_CONSENT_EXPIRED"
   // Situs receipt lifecycle + tax connector (Migration C)

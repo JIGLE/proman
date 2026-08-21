@@ -19,6 +19,7 @@ import { getPrismaClient } from "@/lib/services/database/database";
 import { logAudit } from "@/lib/services/audit-log";
 import { encryptPII } from "@/lib/utils/pii-encryption";
 import { allocateReceipt } from "@/lib/services/allocation/service";
+import { isTestConnection } from "@/lib/services/bank/consent";
 import {
   classifyMatch,
   findPossibleDuplicate,
@@ -288,6 +289,32 @@ export async function importBankRows(
   const prisma = getPrismaClient();
   const { connectionId, bankAccountId } = target ?? (await ensureManualAccount(userId));
 
+  /**
+   * Whether these rows arrive through a connection the operator created to prove the chain works.
+   *
+   * Read from the connection row, not passed in: a caller that forgot the flag would silently
+   * allocate sandbox money, and this is the one property of the import that must not depend on
+   * every call site remembering it.
+   *
+   * A test connection imports identically — same fingerprint dedupe, same fuzzy-duplicate window,
+   * same reconciliation rules, same confidence scoring, and the rows land in the same inbox. The
+   * single thing it may not do is cross the allocation boundary: auto-creating a `Receipt` and
+   * `PaymentAllocation` rows against a REAL lease out of sandbox money is not a test, it is a
+   * corrupted ledger — and an irreversible one, because deleting the connection cascades to the
+   * `BankTransaction` and leaves the `Receipt` behind.
+   *
+   * The confidence and reasons are still recorded, so the inbox can show that a row *would* have
+   * matched at 0.91. That is the evidence the test is for; acting on it is not.
+   */
+  const quarantineFromAllocation = isTestConnection(
+    (
+      await prisma.bankConnection.findUnique({
+        where: { id: connectionId },
+        select: { metadata: true },
+      })
+    )?.metadata ?? null,
+  );
+
   const job = await prisma.bankSyncJob.create({
     data: { userId, connectionId, type: jobType, status: "running" },
   });
@@ -423,6 +450,13 @@ export async function importBankRows(
         warnings.some((w) => w.startsWith("reference_conflict"))
       ) {
         status = "needs_review";
+      }
+
+      // Applied last, and to `status` itself rather than only to the branch below, so the row
+      // that is written and the action that is taken can never disagree about what happened.
+      if (quarantineFromAllocation && status === "auto_matched") {
+        status = "needs_review";
+        warnings.push("test_connection_not_allocated");
       }
 
       const txn = await prisma.bankTransaction.create({

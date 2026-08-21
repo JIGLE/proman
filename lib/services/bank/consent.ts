@@ -41,6 +41,21 @@ export class ConsentFlowError extends Error {
 interface ConnectionMetadata {
   reference?: string;
   accountRefs?: Record<string, string>;
+  /**
+   * A connection the operator created deliberately to prove the chain works, from /admin.
+   *
+   * It is a label, not a mode. The consent, the provider call, the account persistence and the
+   * import pipeline are all identical to a real connection — a test that took a different path
+   * would prove nothing about the path that matters. What the flag buys is that /admin can show
+   * it as a test run and offer to delete it, so a sandbox trial does not sit in Settings
+   * indefinitely looking like a bank someone connected on purpose.
+   */
+  isTest?: boolean;
+}
+
+/** Read the test marker off a connection row without caring how metadata is shaped elsewhere. */
+export function isTestConnection(metadataRaw: string | null): boolean {
+  return readMetadata(metadataRaw).isTest === true;
 }
 
 function readMetadata(raw: string | null): ConnectionMetadata {
@@ -81,6 +96,8 @@ export async function startConsent(
     institutionName: string;
     /** Which provider to consent through. Required once an instance can have more than one. */
     providerKey: string;
+    /** Label this as a deliberate test run. Does not change the flow — see ConnectionMetadata. */
+    isTest?: boolean;
   },
 ): Promise<StartedConsent> {
   const available = configuredProviders();
@@ -114,7 +131,9 @@ export async function startConsent(
       institutionName: input.institutionName,
       status: "pending_consent",
       consentScope: "details,transactions",
-      metadata: JSON.stringify({ reference } satisfies ConnectionMetadata),
+      metadata: JSON.stringify(
+        (input.isTest ? { reference, isTest: true } : { reference }) satisfies ConnectionMetadata,
+      ),
     },
   });
 
@@ -136,7 +155,11 @@ export async function startConsent(
     action: "BANK_CONNECTION_CREATED",
     resourceType: "bank_connection",
     resourceId: connection.id,
-    details: { institutionName: input.institutionName, country: input.country },
+    details: {
+      institutionName: input.institutionName,
+      country: input.country,
+      isTest: input.isTest === true,
+    },
   });
 
   return { connectionId: connection.id, url: link.url };

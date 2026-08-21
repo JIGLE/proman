@@ -107,6 +107,48 @@ export class ConsentExpiredError extends Error {
   }
 }
 
+/**
+ * What a provider can tell an operator about its own configuration, without moving any money or
+ * granting any consent.
+ *
+ * This exists because every setup failure so far looked identical from the app: an empty bank
+ * picker. A missing key, a key that does not match the application id, an application not yet
+ * approved for production, and a redirect URL that was never registered all produced the same
+ * blank list — and the one the operator hits most, the unregistered redirect, does not surface
+ * until they have already been sent to a bank and bounced back.
+ *
+ * Every field is either a fact the provider stated or `null` for "could not establish". Nothing
+ * here is inferred, because a confident wrong diagnosis is worse than no diagnosis.
+ */
+export interface ProviderDiagnostics {
+  /** Whether credentials are present at all. False makes every later field null. */
+  configured: boolean;
+  /** True once the provider accepted a signed request. Null when not attempted. */
+  authenticated: boolean | null;
+  /**
+   * Why authentication failed, in terms an operator can act on. Never the provider's response
+   * body: an auth failure can quote the request — and therefore the signed token — back.
+   */
+  authError: string | null;
+  /** The application's own name, as the provider reports it. */
+  applicationName: string | null;
+  /**
+   * The environment the provider says this application is in — "sandbox", "production", or
+   * whatever string it actually returns. NOT derived from the URL: with Enable Banking both
+   * environments share a host, so the application is the only thing that knows.
+   */
+  environment: string | null;
+  /** Redirect URLs registered with the provider, and whether ours is among them. */
+  redirectUrls: string[];
+  /** The callback this instance will actually send, from NEXTAUTH_URL. */
+  expectedRedirectUrl: string | null;
+  redirectUrlRegistered: boolean | null;
+  /** Institutions the application can reach at all, before any country filter. */
+  institutionsTotal: number | null;
+  /** Per-country counts, so "none in your country" is distinguishable from "none at all". */
+  institutionsByCountry: { country: string; count: number }[];
+}
+
 export interface BankDataProvider {
   /** Stable key; `BankConnection.provider` is stored as `psd2_<key>`. */
   key: string;
@@ -165,4 +207,14 @@ export interface BankDataProvider {
    * Throws `ConsentExpiredError` once the consent lapses.
    */
   fetchTransactions(accountRef: string, since?: Date): Promise<BankCsvRow[]>;
+
+  /**
+   * Read-only self-check for the operator. Optional: a provider that cannot introspect its own
+   * registration simply does not offer one, and the UI says so rather than showing a button that
+   * can only report "unknown".
+   *
+   * Must never throw for a configuration problem — that IS the result. Reserve throwing for a
+   * genuine fault in the check itself.
+   */
+  diagnose?(expectedRedirectUrl: string | null): Promise<ProviderDiagnostics>;
 }
