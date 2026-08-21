@@ -228,7 +228,7 @@ export async function proxy(request: NextRequest) {
   const cookieHeader = request.headers.get("cookie") || "";
   const isDemo = cookieHeader.includes(`${DEMO_COOKIE_NAME}=1`);
   if (isDemo) {
-    const pathWithoutLocale = pathname.replace(/^\/(pt|en|es|it)/, "") || "/";
+    const pathWithoutLocale = pathname.replace(/^\/(pt|en|es|it)(?=\/|$)/, "") || "/";
 
     const isBlocked = DEMO_BLOCKED_PATTERNS.some(
       (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
@@ -251,76 +251,77 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const localeMatch = pathname.match(/^\/(en|pt|es|it)/);
-  const locale = localeMatch ? localeMatch[1] : defaultLocale;
+  // The path as the app thinks of it, with a locale segment stripped when one is present. Both
+  // shapes reach here — the address bar is unprefixed now, but a bookmarked `/pt/financials`
+  // arrives before it is redirected — and every rule below is about the route, not the language.
+  //
+  // This used to be `segments[1]`, gated on `isSupportedLocale`, which silently disabled the
+  // whole block the moment URLs lost their prefix: the auth guard stopped running (an
+  // unauthenticated `/dashboard` rendered the marketing page instead of bouncing to sign-in) and
+  // the CSRF cookie stopped being seeded ("Failed to fetch CSRF token" in the console).
+  const segments = pathname.split("/").filter(Boolean);
+  const appSegments =
+    segments.length > 0 && isSupportedLocale(segments[0]) ? segments.slice(1) : segments;
+  const appPath = `/${appSegments.join("/")}`;
+  const rest = appSegments.join("/");
 
-  // ── Portal page auth guard ──────────────────────────────────────────
-  const segments = pathname.split("/");
-  const localeSegment = segments[1] ?? "";
-  const rest = segments.slice(2).join("/");
+  // Set when an authenticated portal page needs the CSRF cookie seeded. It is applied to
+  // whatever response this function ends up building — returning `NextResponse.next()` here
+  // instead would skip the locale rewrite below, and `/dashboard` would route as
+  // `[locale] = "dashboard"`, i.e. the landing page.
+  let seedCsrfCookie = false;
 
-  if (isSupportedLocale(localeSegment)) {
-    const isMainPortalPage =
-      rest.startsWith("dashboard") ||
-      rest.startsWith("properties") ||
-      rest.startsWith("portfolio") ||
-      rest.startsWith("tenants") ||
-      rest.startsWith("people") ||
-      rest.startsWith("leases") ||
-      rest.startsWith("buildings") ||
-      rest.startsWith("units") ||
-      rest.startsWith("contacts") ||
-      rest.startsWith("contracts") ||
-      rest.startsWith("correspondence") ||
-      rest.startsWith("financials") ||
-      rest.startsWith("maintenance") ||
-      rest.startsWith("reports") ||
-      rest.startsWith("analytics") ||
-      rest.startsWith("insights") ||
-      rest.startsWith("overview") ||
-      rest.startsWith("documents") ||
-      rest.startsWith("owners") ||
-      rest.startsWith("settings");
+  const isMainPortalPage =
+    rest.startsWith("dashboard") ||
+    rest.startsWith("properties") ||
+    rest.startsWith("portfolio") ||
+    rest.startsWith("tenants") ||
+    rest.startsWith("people") ||
+    rest.startsWith("leases") ||
+    rest.startsWith("buildings") ||
+    rest.startsWith("units") ||
+    rest.startsWith("contacts") ||
+    rest.startsWith("contracts") ||
+    rest.startsWith("correspondence") ||
+    rest.startsWith("financials") ||
+    rest.startsWith("maintenance") ||
+    rest.startsWith("reports") ||
+    rest.startsWith("analytics") ||
+    rest.startsWith("insights") ||
+    rest.startsWith("overview") ||
+    rest.startsWith("documents") ||
+    rest.startsWith("owners") ||
+    rest.startsWith("settings");
 
-    if (isMainPortalPage) {
-      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-      // A valid demo cookie stands in for a session on portal pages — otherwise
-      // "Try Demo Mode" bounces straight back to sign-in.
-      if (!token && !isDemo) {
-        // Sign-in lives at app/auth/signin (outside the [locale] segment).
-        const signInUrl = request.nextUrl.clone();
-        signInUrl.pathname = `/auth/signin`;
-        signInUrl.searchParams.set("callbackUrl", pathname);
-        const response = NextResponse.redirect(signInUrl);
-        applySecurityHeaders(response, nonce);
-        return response;
-      }
-
-      // Seed CSRF cookie for portal pages (needed by the API client)
-      const response = NextResponse.next();
+  if (isMainPortalPage) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    // A valid demo cookie stands in for a session on portal pages — otherwise
+    // "Try Demo Mode" bounces straight back to sign-in.
+    if (!token && !isDemo) {
+      // Sign-in lives at app/auth/signin (outside the [locale] segment). Clone-and-retarget
+      // carried the original query onto the sign-in URL and left it out of the callback, so
+      // `/financials?tab=tax` became `/auth/signin?tab=tax` and returned you to `/financials`
+      // on the default tab. The query belongs in the callback and nowhere else.
+      const signInUrl = new URL("/auth/signin", request.nextUrl.origin);
+      signInUrl.searchParams.set("callbackUrl", `${pathname}${request.nextUrl.search}`);
+      const response = NextResponse.redirect(signInUrl);
       applySecurityHeaders(response, nonce);
-      const existingCsrfToken = request.cookies.get("csrf-token")?.value;
-      if (!existingCsrfToken) {
-        const csrfToken = getOrGenerateCsrfToken(request);
-        setCsrfCookie(response, csrfToken);
-      }
       return response;
     }
+
+    // Seed CSRF cookie for portal pages (needed by the API client)
+    seedCsrfCookie = !request.cookies.get("csrf-token")?.value;
   }
 
   // Preserve canonical financial tab routes used by the current UI.
-  const isFinancialsPath = pathname === `/${locale}/financials` || pathname === "/financials";
+  const isFinancialsPath = appPath === "/financials";
   const canonicalFinancialTabs = new Set(["queue", "receipts", "rent-roll", "tax"]);
 
   // Handle old tab-based URL redirects (backward compatibility)
   const tab = searchParams.get("tab");
-  if (tab) {
-    if (isFinancialsPath && canonicalFinancialTabs.has(tab)) {
-      const response = NextResponse.next();
-      applySecurityHeaders(response, nonce);
-      return response;
-    }
-
+  // A canonical tab is not a legacy alias — it must not be rewritten by the map below, and it
+  // must not return `next()` either, for the same reason the CSRF seed above no longer does.
+  if (tab && !(isFinancialsPath && canonicalFinancialTabs.has(tab))) {
     const tabRouteMap: Record<string, string | { path: string; financialTab?: string }> = {
       overview: "/dashboard",
       properties: "/portfolio",
@@ -360,7 +361,7 @@ export async function proxy(request: NextRequest) {
 
   // Handle old subtab-based URLs for financials
   const subtab = searchParams.get("subtab");
-  if (subtab && pathname.includes("financials")) {
+  if (subtab && appPath.startsWith("/financials")) {
     const subtabRouteMap: Record<string, string> = {
       receipts: "receipts",
       expenses: "queue",
@@ -429,6 +430,9 @@ export async function proxy(request: NextRequest) {
   }
 
   applySecurityHeaders(response, nonce);
+  if (seedCsrfCookie) {
+    setCsrfCookie(response, getOrGenerateCsrfToken(request));
+  }
   return response;
 }
 
