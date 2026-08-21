@@ -18,8 +18,8 @@ import {
   Pencil,
   ExternalLink,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/utils";
 import { apiFetch } from "@/lib/utils/api-client";
 import { useCsrf } from "@/lib/contexts/csrf-context";
@@ -86,9 +86,8 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const { state, refreshData, addExpense, addReceipt, addTenant } = useApp();
   const { formatCurrency } = useCurrency();
-  const pathname = usePathname();
   const router = useRouter();
-  const locale = pathname.split("/")[1] || "pt";
+  const locale = useLocale();
   const [activeTab, setActiveTab] = useTabPersistence("property-detail", "overview");
   const t = useTranslations("propertyDetail");
   const tFin = useTranslations("financial");

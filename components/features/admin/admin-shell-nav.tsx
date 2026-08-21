@@ -28,7 +28,7 @@ export function AdminShellNav() {
   const t = useTranslations("admin.shell");
   const pathname = usePathname();
   // Everything after the locale, so comparisons are locale-agnostic.
-  const current = `/${pathname.split("/").slice(2).join("/")}`.replace(/\/$/, "") || "/admin";
+  const current = pathname.replace(/\/$/, "") || "/admin";
 
   return (
     <header className="border-b border-[var(--color-border)] bg-[var(--color-background)]">

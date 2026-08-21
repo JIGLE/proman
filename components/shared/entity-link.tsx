@@ -57,12 +57,11 @@ export function EntityLink({
 }: EntityLinkProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const locale = pathname.split("/")[1] || "pt";
   const config = ENTITY_CONFIG[type];
   const Icon = config.icon;
   const href = config.overlay
     ? withEntityDetail(pathname, searchParams.toString(), type, id)
-    : `/${locale}${config.basePath}/${id}`;
+    : `${config.basePath}/${id}`;
 
   if (variant === "badge") {
     return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useReducedMotion } from "framer-motion";
 import { ArrowDown, ChevronDown } from "lucide-react";
@@ -56,7 +56,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
   const tCountries = useTranslations("landing.countries");
   const reducedMotion = useReducedMotion();
   const router = useRouter();
-  const pathname = usePathname();
   const { country, setCountry } = useTheme();
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -225,9 +224,10 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
   function switchLocale(newLocale: Locale) {
     if (newLocale === locale) return;
     document.cookie = `situs-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
-    const segments = pathname.split("/");
-    segments[1] = newLocale;
-    router.push(segments.join("/") || `/${newLocale}`);
+    // URLs carry no locale segment, so there is nothing to swap. Overwriting segments[1] used to
+    // work by accident on `/` and sent `/privacy` to the landing page everywhere else; the server
+    // layout reads the cookie set above, so a refresh is the whole switch.
+    router.refresh();
     setMenuOpen(false);
   }
 

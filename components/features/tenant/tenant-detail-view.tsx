@@ -28,7 +28,7 @@ import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { getActiveLease as findActiveLease } from "@/lib/utils/lease-helpers";
-import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
+import { buildFinancialReviewPath } from "@/lib/utils/financial-navigation";
 import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 interface TenantDetailViewProps {
@@ -60,7 +60,6 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const locale = pathname.split("/")[1] || "pt";
   const [activeTab, setActiveTab] = useTabPersistence("tenant-detail", "overview");
 
   const tenant = state.tenants.find((t) => t.id === tenantId);
@@ -159,9 +158,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              router.push(buildLocalizedFinancialReviewPath(locale, { tenantId: tenant.id }))
-            }
+            onClick={() => router.push(buildFinancialReviewPath({ tenantId: tenant.id }))}
           >
             <DollarSign className="h-4 w-4 mr-1" /> {t("reviewPayments")}
           </Button>

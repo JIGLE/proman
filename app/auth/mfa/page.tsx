@@ -13,14 +13,13 @@ export const dynamic = "force-dynamic";
 const SUPPORTED_LOCALES = ["pt", "en", "es"] as const;
 
 function detectLocale(): string {
-  if (typeof document !== "undefined" && document.referrer) {
-    try {
-      const segment = new URL(document.referrer).pathname.split("/")[1];
-      if (SUPPORTED_LOCALES.includes(segment as (typeof SUPPORTED_LOCALES)[number])) {
-        return segment;
-      }
-    } catch {
-      // ignore malformed referrer
+  // This used to read the locale out of the referrer's first path segment. URLs no longer carry
+  // one, so that only ever matched by accident; the cookie the proxy and every language control
+  // write is the actual record of the visitor's choice.
+  if (typeof document !== "undefined") {
+    const saved = document.cookie.match(/(?:^|;\s*)situs-locale=([^;]+)/)?.[1];
+    if (saved && SUPPORTED_LOCALES.includes(saved as (typeof SUPPORTED_LOCALES)[number])) {
+      return saved;
     }
   }
   const browserLang = typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "en";

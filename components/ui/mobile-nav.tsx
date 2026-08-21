@@ -10,7 +10,7 @@ import { LanguageSelector } from "@/components/shared/language-selector";
 import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 interface MobileNavProps {
@@ -42,8 +42,7 @@ export function MobileBottomNav({
       .join("")
       .toUpperCase() || "U";
 
-  // Extract locale from pathname
-  const currentLocale = pathname.split("/")[1] || "pt";
+  const currentLocale = useLocale();
   const primaryNavItems = mobilePrimaryNavigation.map((item) => ({
     id: item.key,
     label: tNav(item.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]),
@@ -226,8 +225,8 @@ export function MobileTopBar(): React.ReactElement {
   const tNav = useTranslations("navigation");
   const { navigation } = usePortalAccess();
 
-  // Path with the locale prefix stripped, e.g. "/portfolio/123".
-  const routePath = `/${pathname.split("/").slice(2).join("/")}`;
+  // The URL carries no locale segment, so the path is already the route.
+  const routePath = pathname;
 
   // Resolve the section title from the nav item whose href best matches the
   // current path (longest prefix wins, so "/settings/tax" still reads

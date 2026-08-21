@@ -29,7 +29,6 @@ const SIDEBAR_COLLAPSE_KEY = "situs.sidebar.collapsed";
 interface SidebarFooterProps {
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  locale: string;
   user?: { name?: string | null; email?: string | null; image?: string | null };
   subtitle?: string | null;
 }
@@ -161,7 +160,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   }, []);
 
   const user = session?.user;
-  const currentLocale = pathname.split("/")[1] || "pt";
 
   return (
     <div
@@ -226,8 +224,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 const Icon = item.icon;
                 const isActive =
                   pathname === item.href ||
-                  (item.href !== "/dashboard" &&
-                    pathname.startsWith(`/${currentLocale}${item.href}/`));
+                  (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
 
                 const translatedLabel = t(
                   item.labelKey.replace("navigation.", "") as Parameters<typeof t>[0],
@@ -288,7 +285,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
           <SidebarFooter
             collapsed={collapsed}
             onToggleCollapsed={handleToggleCollapsed}
-            locale={currentLocale}
             user={user}
             subtitle={isDemoMode ? `Demo ${demoPerspective}` : user?.email}
           />

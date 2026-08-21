@@ -15,10 +15,3 @@ export function buildFinancialReviewPath(target?: FinancialReviewTarget): string
 
   return `/financials?${params.toString()}`;
 }
-
-export function buildLocalizedFinancialReviewPath(
-  locale: string,
-  target?: FinancialReviewTarget,
-): string {
-  return `/${locale}${buildFinancialReviewPath(target)}`;
-}
