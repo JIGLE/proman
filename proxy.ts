@@ -213,9 +213,10 @@ export async function proxy(request: NextRequest) {
     /^\/(en|pt|es|it)\/(?:portfolio|properties)\/([^/]+)\/(?:payments?|payment-review|review-payments)(?:\/review)?\/?$/,
   );
   if (legacyPropertyPaymentMatch) {
-    const [, locale, propertyId] = legacyPropertyPaymentMatch;
+    // The captured locale is no longer needed: the target is the unprefixed path.
+    const [, , propertyId] = legacyPropertyPaymentMatch;
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}/financials`;
+    url.pathname = "/financials";
     url.searchParams.set("tab", "receipts");
     url.searchParams.set("propertyId", propertyId);
     const response = NextResponse.redirect(url, 301);
@@ -243,8 +244,7 @@ export async function proxy(request: NextRequest) {
         return response;
       }
       const url = request.nextUrl.clone();
-      const locale = pathname.split("/")[1] || defaultLocale;
-      url.pathname = `/${locale}/dashboard`;
+      url.pathname = "/dashboard";
       const response = NextResponse.redirect(url);
       applySecurityHeaders(response, nonce);
       return response;
@@ -346,7 +346,7 @@ export async function proxy(request: NextRequest) {
     if (mapping) {
       const url = request.nextUrl.clone();
       const path = typeof mapping === "string" ? mapping : mapping.path;
-      url.pathname = `/${locale}${path}`;
+      url.pathname = path;
       url.searchParams.delete("tab");
       url.searchParams.delete("subtab");
       if (typeof mapping !== "string" && mapping.financialTab) {
@@ -371,7 +371,7 @@ export async function proxy(request: NextRequest) {
     const financialTab = subtabRouteMap[subtab];
     if (financialTab) {
       const url = request.nextUrl.clone();
-      url.pathname = `/${locale}/financials`;
+      url.pathname = "/financials";
       url.searchParams.delete("subtab");
       url.searchParams.set("tab", financialTab);
       const response = NextResponse.redirect(url, 301);
@@ -396,16 +396,36 @@ export async function proxy(request: NextRequest) {
 
   let response: NextResponse;
 
-  if (pathnameHasLocale || isLocaleExemptPath) {
+  if (isLocaleExemptPath) {
     response = NextResponse.next();
+  } else if (pathnameHasLocale) {
+    // The prefix is no longer part of the address. Old links, bookmarks, anything still building
+    // `/pt/foo` by hand, and the app's own hrefs until they are migrated all arrive here and are
+    // sent to the clean form. 308 rather than 307: this is permanent, and 308 is the one browsers
+    // and caches may remember.
+    //
+    // The locale is NOT discarded — it is written to the cookie that `resolveLocale` reads, so
+    // following `/es/dashboard` still lands you in Spanish. Dropping it would silently switch a
+    // deliberately shared link back to the visitor's own language.
+    const requested = pathname.split("/")[1];
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/^\/(pt|en|es|it)/, "") || "/";
+    response = NextResponse.redirect(url, { status: 308 });
+    if (isSupportedLocale(requested)) {
+      response.cookies.set("situs-locale", requested, {
+        path: "/",
+        maxAge: 31536000,
+        sameSite: "lax",
+      });
+    }
   } else {
-    // Every locale-less path resolves the same way. Previously only `/` did detection and every
-    // other path was hardcoded to `defaultLocale`, so a locale-less deep link (`/portfolio`)
-    // forced Portuguese on an English visitor. The manifest's app shortcuts are exactly such
-    // links, so they would all have opened in the wrong language.
+    // Rewritten, not redirected: the browser keeps showing `/dashboard` while Next.js routes
+    // `/[locale]/dashboard`, so `app/[locale]/**` is untouched and the address bar loses the
+    // segment. `resolveLocale` reads the cookie first, then Accept-Language — the same order
+    // `lib/i18n/server-locale.ts` uses.
     const url = request.nextUrl.clone();
     url.pathname = `/${resolveLocale(request)}${pathname === "/" ? "" : pathname}`;
-    response = NextResponse.redirect(url, { status: 307 });
+    response = NextResponse.rewrite(url);
   }
 
   applySecurityHeaders(response, nonce);

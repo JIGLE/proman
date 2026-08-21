@@ -259,12 +259,26 @@ export function getSecondaryMobileNavigation(role: PortalRole): PortalNavItem[] 
     .filter((item) => !primaryKeys.has(item.key));
 }
 
+/** Segments that are a language rather than a destination. */
+const LOCALE_SEGMENTS = ["pt", "en", "es", "it"] as const;
+
 export function normalizePortalPath(pathname: string): string {
   const segments = pathname.split("/").filter(Boolean);
-  if (segments.length <= 1) {
+
+  // Locale-agnostic on purpose. This used to take `segments[1]`, hardcoding the assumption that a
+  // language segment came first — true while every URL was `/pt/portfolio`, and false the moment
+  // the address bar lost the prefix. Stripping the segment only when it IS a locale keeps both
+  // shapes correct, so `/en/portfolio` and `/portfolio` normalise identically and no caller has to
+  // know which one it is holding.
+  const rest =
+    segments.length > 0 && (LOCALE_SEGMENTS as readonly string[]).includes(segments[0])
+      ? segments.slice(1)
+      : segments;
+
+  if (rest.length === 0) {
     return "/dashboard";
   }
-  const normalized = `/${segments[1]}`;
+  const normalized = `/${rest[0]}`;
   if (normalized === "/overview") return "/dashboard";
   if (normalized === "/account") return "/settings";
   if (normalized === "/properties") return "/portfolio";
