@@ -262,7 +262,9 @@
       },
       "bankNoProviderTitle": "Bank connection not configured",
       "bankNoProviderBody": "This instance has no Enable Banking credentials, so movements cannot be imported automatically. Set ENABLE_BANKING_APPLICATION_ID and ENABLE_BANKING_PRIVATE_KEY_FILE pointing at the mounted .pem, then restart.",
-      "bankNoProviderCsv": "CSV import works meanwhile, in Finance › Bank Movements — matching, receipts and the rent ledger behave exactly the same on imported movements."
+      "bankNoProviderCsv": "CSV import works meanwhile, in Finance › Bank Movements — matching, receipts and the rent ledger behave exactly the same on imported movements.",
+      "systemStatusMovedHelp": "Instance health moved to the admin area, which is separate from the app.",
+      "openAdmin": "Open admin"
     }
   },
   "gdpr": {
@@ -301,6 +303,59 @@
       "bank": "Bank movements",
       "bank_provider": "Bank provider",
       "tax": "Tax authority — {country}"
+    },
+    "shell": {
+      "title": "Instance administration",
+      "backToApp": "Back to app",
+      "nav": {
+        "status": "Status",
+        "users": "Accounts",
+        "signIn": "Sign-in"
+      }
+    },
+    "users": {
+      "title": "Accounts",
+      "subtitle": "Everyone who can sign in to this instance.",
+      "loading": "Loading…",
+      "loadFailed": "Could not load accounts.",
+      "deleteFailed": "Could not remove that account.",
+      "you": "you",
+      "joined": "joined {date}",
+      "owns": "{count} records",
+      "remove": "Remove",
+      "cancel": "Cancel",
+      "confirmAction": "Remove account",
+      "cannotDeleteSelf": "You cannot remove your own account here.",
+      "confirmTitle": "Remove {email}?",
+      "confirmBody": "This deletes the account and everything it owns:",
+      "ownsNothing": "This account owns no records.",
+      "countProperties": "{count} properties",
+      "countTenants": "{count} tenants",
+      "countLeases": "{count} leases",
+      "countReceipts": "{count} receipts",
+      "irreversible": "This cannot be undone."
+    },
+    "signIn": {
+      "title": "Sign-in",
+      "subtitle": "How anyone can get into this instance.",
+      "loading": "Loading…",
+      "loadFailed": "Could not load sign-in status.",
+      "registrationClosed": "Registration is closed",
+      "registrationClosedHelp": "Only existing accounts, and any email on the allowlist, can sign in.",
+      "registrationOpen": "Registration is open",
+      "registrationOpenHelp": "No account exists yet, so the next sign-in will claim this instance as administrator.",
+      "accounts": "{total} accounts, {admins} of them administrators.",
+      "providers": "Sign-in methods",
+      "provider": {
+        "credentials": "Email and password",
+        "google": "Google"
+      },
+      "configured": "configured",
+      "notConfigured": "not configured",
+      "providersHelp": "Set in the environment, not here. A switch that disabled the method you are signed in with would lock you out with no way back.",
+      "allowlist": "Allowlisted emails",
+      "allowlistEmpty": "None — existing accounts only.",
+      "allowlistHelp": "AUTH_ALLOWED_EMAILS. Additive: these may sign in even though registration is closed."
     }
   },
   "navigation": {

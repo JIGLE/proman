@@ -262,7 +262,9 @@
       },
       "bankNoProviderTitle": "Conexión bancaria no configurada",
       "bankNoProviderBody": "Esta instancia no tiene credenciales de Enable Banking, así que los movimientos no pueden importarse automáticamente. Define ENABLE_BANKING_APPLICATION_ID y ENABLE_BANKING_PRIVATE_KEY_FILE apuntando al .pem montado y reinicia.",
-      "bankNoProviderCsv": "Mientras tanto la importación CSV funciona, en Finanzas › Movimientos Bancarios — la conciliación, los recibos y el libro de rentas se comportan igual."
+      "bankNoProviderCsv": "Mientras tanto la importación CSV funciona, en Finanzas › Movimientos Bancarios — la conciliación, los recibos y el libro de rentas se comportan igual.",
+      "systemStatusMovedHelp": "El estado de la instancia se movió al área de administración, separada de la aplicación.",
+      "openAdmin": "Abrir administración"
     }
   },
   "gdpr": {
@@ -301,6 +303,59 @@
       "bank": "Movimientos bancarios",
       "bank_provider": "Proveedor bancario",
       "tax": "Autoridad fiscal — {country}"
+    },
+    "shell": {
+      "title": "Administración de la instancia",
+      "backToApp": "Volver a la aplicación",
+      "nav": {
+        "status": "Estado",
+        "users": "Cuentas",
+        "signIn": "Acceso"
+      }
+    },
+    "users": {
+      "title": "Cuentas",
+      "subtitle": "Todos los que pueden entrar en esta instancia.",
+      "loading": "Cargando…",
+      "loadFailed": "No se pudieron cargar las cuentas.",
+      "deleteFailed": "No se pudo eliminar esa cuenta.",
+      "you": "tú",
+      "joined": "creada el {date}",
+      "owns": "{count} registros",
+      "remove": "Eliminar",
+      "cancel": "Cancelar",
+      "confirmAction": "Eliminar cuenta",
+      "cannotDeleteSelf": "No puedes eliminar tu propia cuenta aquí.",
+      "confirmTitle": "¿Eliminar {email}?",
+      "confirmBody": "Esto elimina la cuenta y todo lo que le pertenece:",
+      "ownsNothing": "Esta cuenta no tiene registros.",
+      "countProperties": "{count} inmuebles",
+      "countTenants": "{count} inquilinos",
+      "countLeases": "{count} contratos",
+      "countReceipts": "{count} recibos",
+      "irreversible": "Esto no se puede deshacer."
+    },
+    "signIn": {
+      "title": "Acceso",
+      "subtitle": "Cómo se puede entrar en esta instancia.",
+      "loading": "Cargando…",
+      "loadFailed": "No se pudo cargar el estado de acceso.",
+      "registrationClosed": "Registro cerrado",
+      "registrationClosedHelp": "Solo las cuentas existentes, y los correos de la lista permitida, pueden entrar.",
+      "registrationOpen": "Registro abierto",
+      "registrationOpenHelp": "Aún no existe ninguna cuenta, así que el próximo acceso reclamará esta instancia como administrador.",
+      "accounts": "{total} cuentas, {admins} de ellas administradores.",
+      "providers": "Métodos de acceso",
+      "provider": {
+        "credentials": "Correo y contraseña",
+        "google": "Google"
+      },
+      "configured": "configurado",
+      "notConfigured": "no configurado",
+      "providersHelp": "Se definen en el entorno, no aquí. Un interruptor que desactivara el método con el que has entrado te dejaría fuera sin vuelta atrás.",
+      "allowlist": "Correos permitidos",
+      "allowlistEmpty": "Ninguno — solo cuentas existentes.",
+      "allowlistHelp": "AUTH_ALLOWED_EMAILS. Aditivo: estos pueden entrar aunque el registro esté cerrado."
     }
   },
   "navigation": {

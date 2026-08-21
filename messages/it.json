@@ -262,7 +262,9 @@
       },
       "bankNoProviderTitle": "Connessione bancaria non configurata",
       "bankNoProviderBody": "Questa istanza non ha credenziali Enable Banking, quindi i movimenti non possono essere importati automaticamente. Imposta ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY_FILE che punta al .pem montato, poi riavvia.",
-      "bankNoProviderCsv": "Nel frattempo l'importazione CSV funziona, in Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti si comportano allo stesso modo."
+      "bankNoProviderCsv": "Nel frattempo l'importazione CSV funziona, in Finanze › Movimenti Bancari — riconciliazione, ricevute e registro degli affitti si comportano allo stesso modo.",
+      "systemStatusMovedHelp": "Lo stato dell'istanza è passato all'area di amministrazione, separata dall'app.",
+      "openAdmin": "Apri amministrazione"
     }
   },
   "gdpr": {
@@ -301,6 +303,59 @@
       "bank": "Movimenti bancari",
       "bank_provider": "Fornitore bancario",
       "tax": "Autorità fiscale — {country}"
+    },
+    "shell": {
+      "title": "Amministrazione dell'istanza",
+      "backToApp": "Torna all'app",
+      "nav": {
+        "status": "Stato",
+        "users": "Account",
+        "signIn": "Accesso"
+      }
+    },
+    "users": {
+      "title": "Account",
+      "subtitle": "Tutti coloro che possono accedere a questa istanza.",
+      "loading": "Caricamento…",
+      "loadFailed": "Impossibile caricare gli account.",
+      "deleteFailed": "Impossibile rimuovere quell'account.",
+      "you": "tu",
+      "joined": "creato il {date}",
+      "owns": "{count} record",
+      "remove": "Rimuovi",
+      "cancel": "Annulla",
+      "confirmAction": "Rimuovi account",
+      "cannotDeleteSelf": "Non puoi rimuovere il tuo account da qui.",
+      "confirmTitle": "Rimuovere {email}?",
+      "confirmBody": "Questo elimina l'account e tutto ciò che gli appartiene:",
+      "ownsNothing": "Questo account non ha record.",
+      "countProperties": "{count} immobili",
+      "countTenants": "{count} inquilini",
+      "countLeases": "{count} contratti",
+      "countReceipts": "{count} ricevute",
+      "irreversible": "Questa azione non può essere annullata."
+    },
+    "signIn": {
+      "title": "Accesso",
+      "subtitle": "Come si può entrare in questa istanza.",
+      "loading": "Caricamento…",
+      "loadFailed": "Impossibile caricare lo stato di accesso.",
+      "registrationClosed": "Registrazione chiusa",
+      "registrationClosedHelp": "Solo gli account esistenti, e le email nell'elenco consentito, possono accedere.",
+      "registrationOpen": "Registrazione aperta",
+      "registrationOpenHelp": "Non esiste ancora alcun account, quindi il prossimo accesso rivendicherà questa istanza come amministratore.",
+      "accounts": "{total} account, {admins} dei quali amministratori.",
+      "providers": "Metodi di accesso",
+      "provider": {
+        "credentials": "Email e password",
+        "google": "Google"
+      },
+      "configured": "configurato",
+      "notConfigured": "non configurato",
+      "providersHelp": "Impostati nell'ambiente, non qui. Un interruttore che disabilitasse il metodo con cui hai effettuato l'accesso ti bloccherebbe fuori senza via di ritorno.",
+      "allowlist": "Email consentite",
+      "allowlistEmpty": "Nessuna — solo account esistenti.",
+      "allowlistHelp": "AUTH_ALLOWED_EMAILS. Additivo: queste possono accedere anche a registrazione chiusa."
     }
   },
   "navigation": {
