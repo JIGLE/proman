@@ -4,7 +4,6 @@ import * as React from "react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { KeyRound, MonitorSmartphone, ShieldCheck, UserCircle } from "lucide-react";
 
@@ -23,8 +22,6 @@ export function AccountView(): React.ReactElement {
   const t = useTranslations("account");
   const tStatus = useTranslations("status");
   const { data: session } = useSession();
-  const pathname = usePathname();
-  const locale = pathname.split("/")[1] || "pt";
 
   const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
 
@@ -109,7 +106,7 @@ export function AccountView(): React.ReactElement {
             )}
           </div>
           <Button asChild variant="outline" size="sm" className="rounded-none">
-            <Link href={`/${locale}/settings?tab=security`}>{t("manageInSettings")}</Link>
+            <Link href={"/settings?tab=security"}>{t("manageInSettings")}</Link>
           </Button>
         </CardContent>
       </Card>

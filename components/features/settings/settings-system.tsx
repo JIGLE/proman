@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Landmark, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,6 @@ import { Button } from "@/components/ui/button";
 export function SettingsSystem() {
   const t = useTranslations("settings.panel");
   const router = useRouter();
-  const pathname = usePathname();
-  const currentLocale = pathname.split("/")[1] || "en";
 
   return (
     <div className="space-y-6">
@@ -36,11 +34,7 @@ export function SettingsSystem() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-3">{t("taxRulesIntro")}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push(`/${currentLocale}/settings/tax-rules`)}
-          >
+          <Button variant="outline" size="sm" onClick={() => router.push("/settings/tax-rules")}>
             <Landmark className="h-4 w-4 mr-1.5" />
             {t("openTaxRules")}
           </Button>
@@ -56,11 +50,7 @@ export function SettingsSystem() {
           <CardDescription>{t("systemStatusMovedHelp")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push(`/${currentLocale}/admin`)}
-          >
+          <Button variant="outline" size="sm" onClick={() => router.push("/admin")}>
             <ShieldCheck className="h-4 w-4 mr-1.5" />
             {t("openAdmin")}
           </Button>

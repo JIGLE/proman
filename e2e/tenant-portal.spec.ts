@@ -132,7 +132,7 @@ test.describe("Tenants page — status filter", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
   test("status filter should open and select Active", async ({ page }) => {
-    await page.goto("/en/people");
+    await page.goto("/people");
     await settle(page);
 
     const statusTrigger = page.locator('[data-testid="select-trigger-status"]');

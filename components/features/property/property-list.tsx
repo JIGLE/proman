@@ -11,7 +11,7 @@ import {
 } from "react";
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { DataViewMode } from "@/components/ui/data-view-toggle";
 import { Input } from "@/components/ui/input";
 import { PropertyFormDialog, type PropertyFormDialogRef } from "./property-form-dialog";
@@ -64,8 +64,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       loading,
     } = state;
     const router = useRouter();
-    const pathname = usePathname();
-    const locale = pathname.split("/")[1] || "pt";
     const confirmDialog = useConfirmDialog();
     // Property detail modal state
     // Removed: selectedProperty, isDetailModalOpen (now handled by router/modal route)
@@ -207,10 +205,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         const selected = properties.find((property) => property.id === propertyId);
         if (!selected) return;
         // Open property detail overlay via the shared `?detail=` query param
-        router.push(`/${locale}/portfolio?detail=property:${selected.id}`);
+        router.push(`/portfolio?detail=property:${selected.id}`);
         onPropertySelect?.(selected.id);
       },
-      [onPropertySelect, properties, router, locale],
+      [onPropertySelect, properties, router],
     );
 
     // Tree selection: on desktop, open the asset inline in the right workspace pane

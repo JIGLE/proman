@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Building2, Loader2 } from "lucide-react";
 import { csrfHeaders } from "@/lib/utils/api-client";
@@ -16,12 +16,9 @@ export default function DemoPage() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"initializing" | "redirecting" | "error">("initializing");
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const t = useTranslations();
 
-  // Extract locale from pathname
-  const locale = pathname.split("/")[1] || "pt";
   const perspective = searchParams.get("perspective") === "tenant" ? "tenant" : "owner";
   const tenantId = searchParams.get("tenantId") || DEFAULT_DEMO_TENANT_ID;
 
@@ -49,7 +46,7 @@ export default function DemoPage() {
 
         // Step 3: Redirect to dashboard — no NextAuth sign-in needed
         setStatus("redirecting");
-        router.replace(`/${locale}/dashboard`);
+        router.replace("/dashboard");
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -61,7 +58,7 @@ export default function DemoPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, locale, perspective, tenantId]);
+  }, [router, perspective, tenantId]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">

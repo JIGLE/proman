@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, type ReactElement } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+
 import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
@@ -43,11 +43,11 @@ const severityAccent: Record<AlertSeverity, string> = {
   info: "text-[var(--semantic-info)]",
 };
 
-function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: string }) {
+function AlertRow({ alert }: { alert: ActionAlert }) {
   const Icon = alert.icon;
   return (
     <Link
-      href={`/${locale}${alert.href}`}
+      href={alert.href}
       className={cn(
         "alert-card transition-colors hover:brightness-[0.98]",
         severityAlertClass[alert.severity],
@@ -83,9 +83,7 @@ function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: stri
 
 export function ActionPanel(): ReactElement {
   const { state } = useApp();
-  const pathname = usePathname();
   const t = useTranslations("dashboard");
-  const locale = pathname.split("/")[1] || "pt";
 
   const { leases = [], receipts = [], maintenance = [], properties = [] } = state;
 
@@ -315,7 +313,7 @@ export function ActionPanel(): ReactElement {
             )}
           </div>
         ) : (
-          alerts.map((alert) => <AlertRow key={alert.id} alert={alert} locale={locale} />)
+          alerts.map((alert) => <AlertRow key={alert.id} alert={alert} />)
         )}
       </CardContent>
     </Card>

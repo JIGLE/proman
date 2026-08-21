@@ -52,7 +52,7 @@ test.describe("Critical Path: Lease management", () => {
    * are not associated with their `<Label>` via `htmlFor`, so `getByLabel` cannot reach them.
    */
   const openWizard = async (page: import("@playwright/test").Page) => {
-    await page.goto("/en/leases?view=leases");
+    await page.goto("/leases?view=leases");
     await expect(page).toHaveURL(/\/leases/);
     await page
       .getByRole("button", { name: /add lease/i })

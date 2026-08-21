@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { locales, localeNames, type Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils/utils";
@@ -34,7 +34,6 @@ interface LanguageSelectorProps {
 }
 
 export function LanguageSelector({ compact = false, className }: LanguageSelectorProps) {
-  const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("language");
 
@@ -50,17 +49,11 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
       document.cookie = `situs-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     }
 
-    const segments = pathname.split("/");
-    // Routes outside `[locale]` (e.g. `/auth/signin`) have no locale segment to swap —
-    // rewriting segments[1] there would navigate to `/pt/signin`, which does not exist. Their
-    // layout reads the cookie set above, so re-rendering is enough to switch language.
-    if (!(locales as readonly string[]).includes(segments[1])) {
-      router.refresh();
-      return;
-    }
-
-    segments[1] = newLocale;
-    router.push(segments.join("/") || `/${newLocale}`);
+    // No URL carries a locale segment any more, so there is nothing to rewrite: the proxy
+    // rewrites by cookie and every layout resolves its locale from it, which makes re-rendering
+    // the entire switch. The old branch that swapped segments[1] is unreachable, not merely
+    // unused — leaving it would describe a URL shape the app no longer serves.
+    router.refresh();
   };
 
   return (

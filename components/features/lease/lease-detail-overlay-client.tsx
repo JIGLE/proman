@@ -1,6 +1,5 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useApp } from "@/lib/contexts/app-context";
 import { EntityDetailOverlay } from "@/components/shared/entity-detail-overlay";
@@ -8,8 +7,6 @@ import { LeaseDetailView } from "./lease-detail-view";
 
 export function LeaseDetailOverlayClient({ id }: { id: string }) {
   const { state } = useApp();
-  const pathname = usePathname();
-  const locale = pathname.split("/")[1] || "pt";
   const t = useTranslations("entityOverlay");
   const lease = state.leases.find((l) => l.id === id);
   const tenantName = state.tenants.find((t) => t.id === lease?.tenantId)?.name;
@@ -18,7 +15,7 @@ export function LeaseDetailOverlayClient({ id }: { id: string }) {
     <EntityDetailOverlay
       title={t("lease.title")}
       description={t("lease.description", { name: tenantName ?? id })}
-      fullPageHref={`/${locale}/leases/${id}`}
+      fullPageHref={`/leases/${id}`}
     >
       <LeaseDetailView leaseId={id} />
     </EntityDetailOverlay>

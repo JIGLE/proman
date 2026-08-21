@@ -12,7 +12,6 @@ import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { isDemoRequest } from "@/lib/demo/demo-mode";
 import { createCheckoutSession } from "@/lib/billing/subscription-service";
 import { getSecret } from "@/lib/utils/env";
-import { locales, defaultLocale } from "@/lib/i18n/config";
 
 const UPGRADABLE_PLANS = new Set(["pro", "business"]);
 
@@ -28,14 +27,6 @@ function getProTrialDays(): number | undefined {
 
 function getBaseUrl(request: NextRequest): string {
   return process.env.NEXTAUTH_URL || request.nextUrl.origin;
-}
-
-function detectLocale(request: NextRequest): string {
-  const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
-  if (cookieLocale && (locales as readonly string[]).includes(cookieLocale)) {
-    return cookieLocale;
-  }
-  return defaultLocale;
 }
 
 export async function GET(request: NextRequest): Promise<Response> {
@@ -64,15 +55,14 @@ export async function GET(request: NextRequest): Promise<Response> {
 
   const { userId } = authResult;
   const baseUrl = getBaseUrl(request);
-  const locale = detectLocale(request);
 
   try {
     const url = await createCheckoutSession(
       userId,
       plan as "pro" | "business",
       {
-        successUrl: `${baseUrl}/${locale}/settings?tab=billing&checkout=success`,
-        cancelUrl: `${baseUrl}/${locale}/settings?tab=billing&checkout=canceled`,
+        successUrl: `${baseUrl}/settings?tab=billing&checkout=success`,
+        cancelUrl: `${baseUrl}/settings?tab=billing&checkout=canceled`,
       },
       { trialDays: plan === "pro" ? getProTrialDays() : undefined },
     );

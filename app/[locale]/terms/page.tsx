@@ -3,12 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/shared/language-selector";
 
-interface Props {
-  params: Promise<{ locale: string }>;
-}
-
-export async function generateMetadata({ params }: Props) {
-  const { locale: _locale } = await params;
+export async function generateMetadata() {
   const t = await getTranslations("footer");
   return {
     title: `${t("terms")} — Situs`,
@@ -17,8 +12,7 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-export default async function TermsPage({ params }: Props) {
-  const { locale } = await params;
+export default async function TermsPage() {
   const t = await getTranslations("footer");
 
   return (
@@ -27,7 +21,7 @@ export default async function TermsPage({ params }: Props) {
       <header className="sticky top-0 z-50 border-b border-white/[0.04] bg-zinc-950/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <Link
-            href={`/${locale}`}
+            href={"/"}
             className="text-sm font-semibold tracking-tight text-zinc-50 transition-opacity hover:opacity-80"
           >
             Situs
@@ -166,7 +160,7 @@ export default async function TermsPage({ params }: Props) {
 
         <div className="mt-16 border-t border-white/[0.06] pt-8">
           <Button variant="ghost" asChild className="text-zinc-500 hover:text-zinc-300">
-            <Link href={`/${locale}`}>&larr; Back to Situs</Link>
+            <Link href={"/"}>&larr; Back to Situs</Link>
           </Button>
         </div>
       </main>

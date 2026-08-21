@@ -10,7 +10,6 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { getPreferredLocale } from "@/lib/i18n/server-locale";
 import { DevAuthProvider } from "@/components/shared/dev-auth";
-import { defaultLocale } from "@/lib/i18n/config";
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
@@ -82,14 +81,18 @@ export default async function RootLayout({
   // Get CSP nonce for inline scripts/styles
   const nonce = await getNonce();
 
-  // Locale for the app chrome that renders outside the `[locale]` segment.
+  // Locale for the app chrome that renders outside the `[locale]` segment. It also drives
+  // `<html lang>` below, which used to be hardcoded to `defaultLocale` — so every response
+  // claimed Portuguese whatever it actually rendered. That was survivable while the URL still
+  // named the language; unprefixed, this attribute is the only thing in the response that does,
+  // and screen readers and translation tooling read it.
   const chromeLocale = await getPreferredLocale();
   setRequestLocale(chromeLocale);
   const chromeMessages = await getMessages({ locale: chromeLocale });
 
   return (
     <html
-      lang={defaultLocale}
+      lang={chromeLocale}
       className={`${instrumentSans.variable} ${jetbrainsMono.variable}`}
       data-country="PT"
       data-mode="normal"

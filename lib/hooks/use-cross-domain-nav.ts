@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
+import { locales } from "@/lib/i18n/config";
 
 /**
  * Cross-Domain Navigation Hook
@@ -53,6 +54,18 @@ export interface CrossDomainNavResult {
   originSection: string | null;
 }
 
+/**
+ * Strip a leading locale segment if there is one. `/^\/[a-z]{2}/` used to do this, which was
+ * only ever safe while every URL carried a prefix — unprefixed, it eats the first two letters
+ * of the section itself (`/people` -> `ople`). Match the segment, not its shape.
+ */
+function stripLocale(pathname: string): string {
+  const match = pathname.match(/^\/([a-z]{2})(?=\/|$)/);
+  return match && (locales as readonly string[]).includes(match[1])
+    ? pathname.slice(match[0].length) || "/"
+    : pathname;
+}
+
 export function useCrossDomainNav(): CrossDomainNavResult {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -62,9 +75,11 @@ export function useCrossDomainNav(): CrossDomainNavResult {
 
   const originSection = useMemo(() => {
     if (!returnTo) return null;
-    // Extract section from returnTo URL (e.g., "/en/assets/123" -> "assets")
-    const match = returnTo.match(/\/[a-z]{2}\/([\w-]+)/);
-    return match ? match[1] : null;
+    // Extract the section from a returnTo URL ("/assets/123" -> "assets"). URLs carry no locale
+    // segment, but a stored one may still, so strip a leading locale before taking the first
+    // segment rather than assuming its position either way.
+    const [section] = stripLocale(returnTo).split("?")[0].split("/").filter(Boolean);
+    return section ?? null;
   }, [returnTo]);
 
   const buildContextUrl = useCallback(
@@ -139,8 +154,7 @@ export type Section = keyof typeof SECTION_ROUTES;
  * Get the section from a pathname
  */
 export function getSectionFromPath(pathname: string): Section | null {
-  // Remove locale prefix (e.g., /en/properties -> /properties)
-  const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}/, "");
+  const pathWithoutLocale = stripLocale(pathname);
 
   for (const [section, route] of Object.entries(SECTION_ROUTES)) {
     if (pathWithoutLocale.startsWith(route)) {
@@ -157,7 +171,7 @@ export function getSectionFromPath(pathname: string): Section | null {
 export function buildLocalePath(locale: string, path: string): string {
   // Ensure path starts with /
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `/${locale}${normalizedPath}`;
+  return normalizedPath;
 }
 
 export default useCrossDomainNav;

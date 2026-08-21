@@ -29,7 +29,6 @@ const SIDEBAR_COLLAPSE_KEY = "situs.sidebar.collapsed";
 interface SidebarFooterProps {
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  locale: string;
   user?: { name?: string | null; email?: string | null; image?: string | null };
   subtitle?: string | null;
 }
@@ -37,7 +36,6 @@ interface SidebarFooterProps {
 function SidebarFooter({
   collapsed,
   onToggleCollapsed,
-  locale,
   user,
   subtitle,
 }: SidebarFooterProps): React.ReactElement {
@@ -57,7 +55,7 @@ function SidebarFooter({
         {/* The name is the way into the account. It used to be an inert <div>, so the only
             route to account settings was a nav row of its own; that row is gone now. */}
         <Link
-          href={`/${locale}/settings?tab=account`}
+          href={"/settings?tab=account"}
           className="flex min-h-11 items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[var(--color-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--country-highlight-readable)]"
           title={tNav("account")}
         >
@@ -79,7 +77,7 @@ function SidebarFooter({
         {/* Country · mode indicator (controls live in Settings › Appearance). */}
         <div className="flex items-center justify-between gap-2 px-1">
           <Link
-            href={`/${locale}/settings?tab=appearance`}
+            href={"/settings?tab=appearance"}
             className="mono-label truncate hover:text-[var(--color-foreground)]"
             title={tSettings("appearance")}
           >
@@ -88,7 +86,7 @@ function SidebarFooter({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => signOut({ callbackUrl: `/${locale}` })}
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="h-8 w-8 shrink-0 p-0 hover:bg-[var(--color-error-muted)] hover:text-[var(--color-destructive)]"
             title="Sign Out"
             aria-label="Sign Out"
@@ -103,7 +101,7 @@ function SidebarFooter({
   return (
     <div className="flex flex-col items-center gap-2">
       <Link
-        href={`/${locale}/settings?tab=account`}
+        href={"/settings?tab=account"}
         className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--country-highlight-readable)]"
         title={tNav("account")}
       >
@@ -162,7 +160,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   }, []);
 
   const user = session?.user;
-  const currentLocale = pathname.split("/")[1] || "pt";
 
   return (
     <div
@@ -226,9 +223,8 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isActive =
-                  pathname === `/${currentLocale}${item.href}` ||
-                  (item.href !== "/dashboard" &&
-                    pathname.startsWith(`/${currentLocale}${item.href}/`));
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
 
                 const translatedLabel = t(
                   item.labelKey.replace("navigation.", "") as Parameters<typeof t>[0],
@@ -244,7 +240,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                   // meaningful on a link, so the anchor was always intended to be one.
                   <div key={item.key} role="listitem">
                     <Link
-                      href={`/${currentLocale}${item.href}`}
+                      href={item.href}
                       onClick={() => onTabChange?.(item.key)}
                       aria-current={isActive ? "page" : undefined}
                       title={collapsed ? translatedLabel : undefined}
@@ -289,7 +285,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
           <SidebarFooter
             collapsed={collapsed}
             onToggleCollapsed={handleToggleCollapsed}
-            locale={currentLocale}
             user={user}
             subtitle={isDemoMode ? `Demo ${demoPerspective}` : user?.email}
           />

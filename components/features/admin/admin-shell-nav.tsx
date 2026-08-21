@@ -27,9 +27,8 @@ const SECTIONS = [
 export function AdminShellNav() {
   const t = useTranslations("admin.shell");
   const pathname = usePathname();
-  const locale = pathname.split("/")[1] || "en";
   // Everything after the locale, so comparisons are locale-agnostic.
-  const current = `/${pathname.split("/").slice(2).join("/")}`.replace(/\/$/, "") || "/admin";
+  const current = pathname.replace(/\/$/, "") || "/admin";
 
   return (
     <header className="border-b border-[var(--color-border)] bg-[var(--color-background)]">
@@ -40,7 +39,7 @@ export function AdminShellNav() {
             {t("title")}
           </p>
           <Link
-            href={`/${locale}/dashboard`}
+            href={"/dashboard"}
             className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-[var(--color-foreground)]"
           >
             <ArrowLeft className="size-4" aria-hidden />
@@ -54,7 +53,7 @@ export function AdminShellNav() {
             return (
               <Link
                 key={section.key}
-                href={`/${locale}${section.href}`}
+                href={section.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "whitespace-nowrap rounded-md px-3 py-2 text-sm transition-colors",

@@ -18,8 +18,8 @@ import {
   Pencil,
   ExternalLink,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/utils";
 import { apiFetch } from "@/lib/utils/api-client";
 import { useCsrf } from "@/lib/contexts/csrf-context";
@@ -86,9 +86,8 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const { state, refreshData, addExpense, addReceipt, addTenant } = useApp();
   const { formatCurrency } = useCurrency();
-  const pathname = usePathname();
   const router = useRouter();
-  const locale = pathname.split("/")[1] || "pt";
+  const locale = useLocale();
   const [activeTab, setActiveTab] = useTabPersistence("property-detail", "overview");
   const t = useTranslations("propertyDetail");
   const tFin = useTranslations("financial");
@@ -410,7 +409,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <p className="text-[var(--color-muted-foreground)]">{t("notFound")}</p>
-        <Button variant="outline" onClick={() => router.push(`/${locale}/portfolio`)}>
+        <Button variant="outline" onClick={() => router.push("/portfolio")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t("actions.backToProperties")}
         </Button>
@@ -449,7 +448,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 size="sm"
                 onClick={() => {
                   setDocumentsOpen(false);
-                  router.push(`/${locale}/documents?propertyId=${property.id}`);
+                  router.push(`/documents?propertyId=${property.id}`);
                 }}
               >
                 {t("actions.openInDocuments")} <ExternalLink className="h-3.5 w-3.5 ml-1" />
@@ -1081,7 +1080,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                           size="sm"
                           variant="ghost"
                           className="h-5 px-2 text-xs text-[var(--color-warning)] hover:bg-[var(--color-warning-muted)] hover:text-[var(--color-warning)]"
-                          onClick={() => router.push(`/${locale}/leases`)}
+                          onClick={() => router.push("/leases")}
                         >
                           {t("renew")}
                         </Button>
@@ -1096,11 +1095,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     {property.status === "vacant" ? t("vacantNotice") : t("noRelatedEntities")}
                   </p>
                   {property.status === "vacant" && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/${locale}/leases`)}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => router.push("/leases")}>
                       <FileText className="h-3.5 w-3.5 mr-1.5" />
                       {t("createLease")}
                     </Button>
@@ -1243,7 +1238,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => router.push(`/${locale}/operations?propertyId=${propertyId}`)}
+                    onClick={() => router.push(`/operations?propertyId=${propertyId}`)}
                   >
                     <Wrench className="h-3.5 w-3.5 mr-1.5" />
                     View in Maintenance

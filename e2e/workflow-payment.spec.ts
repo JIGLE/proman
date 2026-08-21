@@ -6,7 +6,7 @@ test("Critical Path: Record new payment", async ({ page }) => {
   // 1. Navigate to financials page with receipts tab active
   // (there is no /financials/receipts sub-route; the receipts view is a tab
   // within FinancialsContainer, default tab is "overview")
-  await page.goto("/en/financials?view=receipts");
+  await page.goto("/financials?view=receipts");
 
   // Verify we are on the financials page
   await expect(page).toHaveURL(/.*\/financials/);

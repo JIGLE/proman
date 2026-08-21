@@ -18,11 +18,10 @@ import { cn } from "@/lib/utils/utils";
 export function ComplianceSubNav(): React.ReactElement {
   const pathname = usePathname();
   const tNav = useTranslations("navigation");
-  const locale = pathname.split("/")[1] || "pt";
 
   const items = [
-    { href: `/${locale}/compliance/modelo179`, label: "Modelo 179" },
-    { href: `/${locale}/compliance/tax-filing`, label: tNav("taxFiling") },
+    { href: "/compliance/modelo179", label: "Modelo 179" },
+    { href: "/compliance/tax-filing", label: tNav("taxFiling") },
   ];
 
   return (

@@ -51,20 +51,18 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
   const pathname = usePathname();
   const { state } = useApp();
 
-  // Split pathname: /pt/properties/123 → ["pt", "properties", "123"]
-  const segments = pathname.split("/").filter(Boolean);
-
-  // First segment is the locale — skip it for display but keep for href building
-  const locale = segments[0] || "pt";
-  const routeSegments = segments.slice(1);
+  // Split pathname: /properties/123 → ["properties", "123"]. This used to drop segments[0] as
+  // the locale, which was right only while every URL carried a prefix — unprefixed it threw
+  // away the section itself, so /portfolio/123 became a one-crumb path and rendered nothing.
+  const routeSegments = pathname.split("/").filter(Boolean);
 
   if (routeSegments.length <= 1) {
-    // On top-level pages (e.g. /pt/dashboard), no breadcrumb needed
+    // On top-level pages (e.g. /dashboard), no breadcrumb needed
     return null;
   }
 
   const crumbs = routeSegments.map((segment, index) => {
-    const href = `/${locale}/${routeSegments.slice(0, index + 1).join("/")}`;
+    const href = `/${routeSegments.slice(0, index + 1).join("/")}`;
     const isLast = index === routeSegments.length - 1;
 
     // Check for overrides first (for dynamic segments like entity ids)
@@ -97,7 +95,7 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
     >
       {/* Home icon linking to dashboard */}
       <Link
-        href={`/${locale}/dashboard`}
+        href={"/dashboard"}
         className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
         aria-label={tNav("dashboard")}
       >

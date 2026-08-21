@@ -17,16 +17,16 @@ test.use({ storageState: "playwright/.auth/user.json" });
  */
 test.describe("Dashboard", () => {
   test("should display the main dashboard", async ({ page }) => {
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
-    await expect(page).toHaveURL(/\/en\/dashboard/);
+    await expect(page).toHaveURL((url) => url.pathname === "/dashboard");
     // The app shell must actually render — not merely "some text on the page".
     await expect(page.getByRole("navigation").first()).toBeVisible();
   });
 
   test("should navigate to Portfolio section", async ({ page }) => {
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const portfolioLink = page.getByRole("link", { name: /portfolio/i }).first();
@@ -34,18 +34,18 @@ test.describe("Dashboard", () => {
     await portfolioLink.click();
 
     // Assert the destination, not the word that matched the link.
-    await expect(page).toHaveURL(/\/en\/portfolio/);
+    await expect(page).toHaveURL((url) => url.pathname === "/portfolio");
   });
 
   test("should navigate to People section", async ({ page }) => {
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const peopleLink = page.getByRole("link", { name: /people/i }).first();
     await expect(peopleLink).toBeVisible();
     await peopleLink.click();
 
-    await expect(page).toHaveURL(/\/en\/people/);
+    await expect(page).toHaveURL((url) => url.pathname === "/people");
   });
 
   test("should switch language from Settings › Appearance", async ({ page }) => {
@@ -55,7 +55,7 @@ test.describe("Dashboard", () => {
     // not rendered anywhere in the authenticated desktop shell — only in the mobile "More" sheet
     // (components/ui/mobile-nav.tsx:194), the auth pages and the landing page. On desktop the
     // control lives in Settings › Appearance, so test it where it actually is.
-    await page.goto("/en/settings?tab=appearance");
+    await page.goto("/settings?tab=appearance");
     await settle(page);
 
     // Anchor on the field, not on its current value: a locator filtered by `/english/i` stops

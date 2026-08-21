@@ -47,13 +47,13 @@ test.describe("No Native confirm() Calls", () => {
       dialog.dismiss();
     });
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     await expect(navLink).toBeVisible();
     await navLink.click();
-    await expect(page).toHaveURL(/\/en\/portfolio/);
+    await expect(page).toHaveURL((url) => url.pathname === "/portfolio");
     await settle(page);
 
     // Native confirm() should NEVER appear – we use AlertDialog. (Portfolio has no delete
@@ -68,13 +68,13 @@ test.describe("No Native confirm() Calls", () => {
       dialog.dismiss();
     });
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
     await expect(navLink).toBeVisible();
     await navLink.click();
-    await expect(page).toHaveURL(/\/en\/people/);
+    await expect(page).toHaveURL((url) => url.pathname === "/people");
     await settle(page);
 
     // Actually trigger the destructive path, which is what makes this assertion mean anything:
@@ -96,7 +96,7 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     // Page should load successfully
@@ -111,13 +111,13 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     await expect(navLink).toBeVisible();
     await navLink.click();
-    await expect(page).toHaveURL(/\/en\/portfolio/);
+    await expect(page).toHaveURL((url) => url.pathname === "/portfolio");
     await settle(page);
 
     expect(errors).toHaveLength(0);
@@ -127,13 +127,13 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
     await expect(navLink).toBeVisible();
     await navLink.click();
-    await expect(page).toHaveURL(/\/en\/people/);
+    await expect(page).toHaveURL((url) => url.pathname === "/people");
     await settle(page);
 
     expect(errors).toHaveLength(0);

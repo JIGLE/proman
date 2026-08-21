@@ -19,7 +19,7 @@ export default async function LandingPage({ params }: Props) {
     const { getAuthOptions } = await import("@/lib/services/auth/auth");
     const session = await getServerSession(getAuthOptions());
     if (session?.user) {
-      redirect(`/${locale}/dashboard`);
+      redirect("/dashboard");
     }
   } catch {
     // Session check failed — render the public landing normally.
@@ -33,7 +33,7 @@ export default async function LandingPage({ params }: Props) {
 
       {/* Installed-PWA visitors get an app-native welcome instead of the marketing scroll below.
           Renders null for normal browser tabs (standalone display-mode detected client-side). */}
-      <PwaWelcome locale={locale} />
+      <PwaWelcome />
 
       {/* The whole page is this one screen — no header/nav, no marketing sections below it, on
           any viewport. LandingHeroSequence carries its own locale control and CTAs, so nothing
@@ -71,17 +71,11 @@ export default async function LandingPage({ params }: Props) {
             {tFooter("copyright", { year: new Date().getFullYear() })}
           </span>{" "}
           ·{" "}
-          <a
-            href={`/${locale}/privacy`}
-            className="transition-colors hover:text-[var(--color-foreground)]"
-          >
+          <a href={"/privacy"} className="transition-colors hover:text-[var(--color-foreground)]">
             {tFooter("privacy")}
           </a>{" "}
           ·{" "}
-          <a
-            href={`/${locale}/terms`}
-            className="transition-colors hover:text-[var(--color-foreground)]"
-          >
+          <a href={"/terms"} className="transition-colors hover:text-[var(--color-foreground)]">
             {tFooter("terms")}
           </a>
         </p>

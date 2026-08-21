@@ -71,7 +71,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
    * not exist, which is the other half of why it could only ever skip.
    */
   const openTenantDeleteConfirmation = async (page: import("@playwright/test").Page) => {
-    await page.goto("/en/people");
+    await page.goto("/people");
     await settle(page);
 
     const rowMenu = page.getByRole("button", { name: /options$/i }).first();
@@ -105,7 +105,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
   });
 
   test("cancelling the confirmation leaves the tenant in place", async ({ page }) => {
-    await page.goto("/en/people");
+    await page.goto("/people");
     await settle(page);
 
     const firstRowMenu = page.getByRole("button", { name: /options$/i }).first();
@@ -131,7 +131,7 @@ test.describe("Form Validation – Authenticated", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
   test("property form reports a required field once it is cleared", async ({ page }) => {
-    await page.goto("/en/portfolio?view=properties");
+    await page.goto("/portfolio?view=properties");
     await settle(page);
 
     // Create is a "New asset" dropdown → "New property" item; see workflow-property.spec.ts.

@@ -12,7 +12,7 @@ test.use({ storageState: "playwright/.auth/user.json" });
  * inbox reflects the import.
  */
 test("Critical Path: import a bank movement and see it land in the inbox", async ({ page }) => {
-  await page.goto("/en/financials?tab=bank");
+  await page.goto("/financials?tab=bank");
   await expect(page).toHaveURL(/\/financials/);
 
   // The setup project signs in as the owner demo account, so the bank tab is always available.

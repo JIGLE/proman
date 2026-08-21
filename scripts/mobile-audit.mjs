@@ -61,9 +61,13 @@ const opt = (name, fallback) => {
 };
 
 /**
- * Locale to audit. Surface paths are written `/en/...`, but English is the SHORTEST of the
- * four catalogues — Portuguese and Spanish labels are materially longer, and label length
- * is what actually breaks a nav or a tab bar. Auditing only `/en` measures the best case.
+ * Locale to audit. English is the SHORTEST of the four catalogues — Portuguese and Spanish
+ * labels are materially longer, and label length is what actually breaks a nav or a tab bar.
+ * Auditing only `en` measures the best case.
+ *
+ * URLs carry no locale segment any more, so this is applied as the `situs-locale` cookie the
+ * proxy reads (`getLocaleForRequest`) rather than as a path prefix. Setting it explicitly also
+ * pins the run against `Accept-Language`, which would otherwise decide it.
  */
 const LOCALE = opt("locale", "en");
 const VIEWPORT_WIDTH = Number(opt("width", 390));
@@ -80,16 +84,30 @@ const STRICT = flag("strict");
  * already met on every surface, and unlike the other metrics it has no legitimate reason to
  * regress.
  *
- * `smallText` is close to its floor. Of the 310 remaining, 264 are the bottom nav's own labels
+ * `smallText` is close to its floor. Of the ~310 remaining, 264 are the bottom nav's own labels
  * at 11px — which is what native iOS/Android tab bars use, so they stay — and 44 are avatar
  * initials, a glyph sized to its circle rather than text to read. Do not chase this one to
  * zero; it would mean overriding two deliberate choices.
  *
- * `touchTargetFails: 4` is two links, each counted once per theme: "Política de Privacidade"
- * (188×16) and "Termos de Serviço" (139×16) in the landing footer. Both are text links in
- * prose, which the doctrine's rule 2 exempts only with explicit design review — so this is
- * recorded debt, not an accepted floor. It is also the whole of the metric: every other touch
+ * `touchTargetFails` is the landing footer's two text links, counted once per theme. They are
+ * links in prose, which the doctrine's rule 2 exempts only with explicit design review — so this
+ * is recorded debt, not an accepted floor. It is also the whole of the metric: every other touch
  * target in the app now clears 44px below `md`.
+ *
+ * It reads 2 rather than 4 now, and the ceiling stays at 4 deliberately. The measurement used to
+ * run in Portuguese ("Política de Privacidade" 188×16, "Termos de Serviço" 139×16 — both fails);
+ * with the locale pinned to English by cookie, "Terms of Service" wraps to 192×35 and lands in
+ * the warn band instead. That is a text-wrapping artifact, not a fix: a font-metric difference
+ * between browser builds could put it back. Tightening to 2 would make the gate depend on how
+ * one string happens to wrap.
+ *
+ * Two of these metrics are NOT deterministic, which was found by running the harness three times
+ * back to back against one build and one database: `clippedContainers` gave 4, 6, 6 and
+ * `smallText` gave 308, 308, 309. The spread is small but real — layout settles differently when
+ * a surface does not reach networkidle inside the 5s cap — so a single green run is not evidence
+ * that a lower ceiling holds. Tighten either one only from repeated runs that all agree, and
+ * expect the true floor to sit a point or two above the best number you have seen.
+ * `pageOverflow`, `viewportTallChildren` and `touchTargetFails` have been stable across runs.
  *
  * These come from a **seeded** run (`--seed --strict`, 52 surface-runs). An unseeded run walks
  * empty screens — a table with no rows cannot overflow — so its numbers are meaningless as a
@@ -126,34 +144,34 @@ const BASELINE = {
  * rather than hardcoding fixtures, so the overlay is measured with genuine content in it.
  */
 const SURFACES = [
-  { id: "landing", path: "/en", auth: false },
+  { id: "landing", path: "/", auth: false },
   { id: "signin", path: "/auth/signin", auth: false },
   { id: "signup", path: "/auth/signup", auth: false },
-  { id: "dashboard", path: "/en/dashboard" },
-  { id: "portfolio", path: "/en/portfolio" },
+  { id: "dashboard", path: "/dashboard" },
+  { id: "portfolio", path: "/portfolio" },
   // Detail overlays open via `?detail=<type>:<id>` (see lib/utils/entity-detail-url.ts).
-  { id: "detail-property", path: "/en/portfolio?detail=property:{propertyId}", overlay: true },
-  { id: "people", path: "/en/people" },
-  { id: "detail-tenant", path: "/en/people?detail=tenant:{tenantId}", overlay: true },
-  { id: "financials", path: "/en/financials" },
-  { id: "financials-bank", path: "/en/financials?tab=bank" },
-  { id: "financials-tax", path: "/en/financials?tab=tax" },
-  { id: "operations", path: "/en/operations" },
-  { id: "leases", path: "/en/leases" },
-  { id: "detail-lease", path: "/en/leases?detail=lease:{leaseId}", overlay: true },
-  { id: "documents", path: "/en/documents" },
-  { id: "detail-document", path: "/en/documents?detail=document:{documentId}", overlay: true },
-  { id: "intelligence", path: "/en/intelligence" },
-  { id: "correspondence", path: "/en/correspondence" },
-  { id: "buildings", path: "/en/buildings" },
-  { id: "contacts", path: "/en/contacts" },
-  { id: "contracts", path: "/en/contracts" },
-  { id: "settings", path: "/en/settings" },
+  { id: "detail-property", path: "/portfolio?detail=property:{propertyId}", overlay: true },
+  { id: "people", path: "/people" },
+  { id: "detail-tenant", path: "/people?detail=tenant:{tenantId}", overlay: true },
+  { id: "financials", path: "/financials" },
+  { id: "financials-bank", path: "/financials?tab=bank" },
+  { id: "financials-tax", path: "/financials?tab=tax" },
+  { id: "operations", path: "/operations" },
+  { id: "leases", path: "/leases" },
+  { id: "detail-lease", path: "/leases?detail=lease:{leaseId}", overlay: true },
+  { id: "documents", path: "/documents" },
+  { id: "detail-document", path: "/documents?detail=document:{documentId}", overlay: true },
+  { id: "intelligence", path: "/intelligence" },
+  { id: "correspondence", path: "/correspondence" },
+  { id: "buildings", path: "/buildings" },
+  { id: "contacts", path: "/contacts" },
+  { id: "contracts", path: "/contracts" },
+  { id: "settings", path: "/settings" },
   // Account is a Settings section now; measure it where it lives rather than through the
   // /account redirect, so the surface id matches the URL that renders.
-  { id: "account", path: "/en/settings?tab=account" },
-  { id: "compliance-tax-filing", path: "/en/compliance/tax-filing" },
-  { id: "compliance-modelo179", path: "/en/compliance/modelo179" },
+  { id: "account", path: "/settings?tab=account" },
+  { id: "compliance-tax-filing", path: "/compliance/tax-filing" },
+  { id: "compliance-modelo179", path: "/compliance/modelo179" },
   // Tenant portal: token-gated, so the whole path (not just an id) is substituted — the token
   // is minted at runtime via the same "invite tenant" API the owner-facing UI calls.
   { id: "tenant-portal", path: "{tenantPortalPath}", auth: false },
@@ -389,7 +407,9 @@ async function login(page) {
   // Match the form's submit button structurally, not by label: the auth pages are localized
   // and default to Portuguese, so a hardcoded "Sign in" stopped matching.
   await page.locator('form button[type="submit"]').click();
-  await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
+  // No locale segment to match on any more — what this waits for is "sign-in completed and we
+  // left /auth", which is what the locale pattern was standing in for.
+  await page.waitForURL((url) => !url.pathname.startsWith("/auth/"), { timeout: 20000 });
 }
 
 /** Pull real record ids so the `?modal=` overlays are measured with genuine content. */
@@ -464,10 +484,7 @@ async function auditSurface(context, surface, theme, ids) {
   );
   await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
 
-  const path = surface.path
-    .replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "")
-    // Locale-prefixed routes only; /auth/* and /tenant-portal/* carry no prefix.
-    .replace(/^\/en(?=\/|$)/, `/${LOCALE}`);
+  const path = surface.path.replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "");
   const url = `${BASE}${path}`;
 
   const result = {
@@ -688,6 +705,13 @@ async function main() {
       /* storage disabled — the overlay just shows, same as a real first visit */
     }
   }, LOCALE);
+
+  // `--locale pt` used to work by rewriting the path prefix. With the prefix gone the proxy
+  // resolves the locale from the `situs-locale` cookie, so set it on both contexts — otherwise
+  // the flag would silently audit whatever `Accept-Language` happened to negotiate.
+  for (const ctx of [context, anonContext]) {
+    await ctx.addCookies([{ name: "situs-locale", value: LOCALE, url: BASE }]);
+  }
 
   const bootstrap = await context.newPage();
   await login(bootstrap);

@@ -31,7 +31,7 @@ test.describe("Critical Path: Property management", () => {
       if (msg.type() === "error") console.error("Browser error:", msg.text());
     });
 
-    await page.goto("/en/portfolio?view=properties");
+    await page.goto("/portfolio?view=properties");
     await expect(page).toHaveURL(/\/portfolio/);
 
     const dialog = await openCreatePropertyDialog(page);
@@ -61,7 +61,7 @@ test.describe("Critical Path: Property management", () => {
   });
 
   test("should show validation errors when required fields are missing", async ({ page }) => {
-    await page.goto("/en/portfolio?view=properties");
+    await page.goto("/portfolio?view=properties");
     const dialog = await openCreatePropertyDialog(page);
 
     // Submit without filling anything. Unlike the tenant form, none of these inputs carry the
@@ -76,7 +76,7 @@ test.describe("Critical Path: Property management", () => {
   });
 
   test("should cancel the dialog without creating a property", async ({ page }) => {
-    await page.goto("/en/portfolio?view=properties");
+    await page.goto("/portfolio?view=properties");
     const dialog = await openCreatePropertyDialog(page);
 
     await page.getByLabel("Property Name").fill("Should not be created");

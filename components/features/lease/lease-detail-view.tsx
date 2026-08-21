@@ -13,7 +13,7 @@ import {
   Clock,
   Ban,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
@@ -56,9 +56,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const tForms = useTranslations("forms");
   const tActions = useTranslations("actions");
   const confirmDialog = useConfirmDialog();
-  const pathname = usePathname();
   const router = useRouter();
-  const locale = pathname.split("/")[1] || "pt";
 
   // Renewal offer dialog state
   const [renewalOpen, setRenewalOpen] = useState(false);
@@ -83,7 +81,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <p className="text-[var(--color-muted-foreground)]">{t("notFound")}</p>
-        <Button variant="outline" onClick={() => router.push(`/${locale}/leases`)}>
+        <Button variant="outline" onClick={() => router.push("/leases")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t("backToLeases")}
         </Button>
@@ -99,7 +97,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
     .reduce((sum, r) => sum + r.amount, 0);
 
   const handleEdit = () => {
-    router.push(`/${locale}/leases?action=edit&id=${lease.id}`);
+    router.push(`/leases?action=edit&id=${lease.id}`);
   };
 
   const handleRenew = () => setRenewalOpen(true);
@@ -160,7 +158,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
         try {
           await updateLease(lease.id, { status: "terminated" });
           success(t("toastTerminated"));
-          router.push(`/${locale}/leases`);
+          router.push("/leases");
         } catch {
           error(t("toastTerminateFailed"));
         }
