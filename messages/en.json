@@ -416,6 +416,8 @@
       "testHelp": "A test connection runs the same consent and the same import as a real one. The only thing it does not do is create receipts: test money is never allocated to a lease.",
       "startTest": "Connect test",
       "connectFailed": "The test connection could not be started.",
+      "connected": "Test connection completed — imported movements appear in Finance, but create no receipts.",
+      "failed": "The test connection did not complete. Check the server log.",
       "existing": "{count} test connections",
       "connectionSummary": "{status} · {accounts} accounts · {movements} movements",
       "removeLabel": "Remove {name}",

@@ -416,6 +416,8 @@
       "testHelp": "Un collegamento di prova segue lo stesso consenso e la stessa importazione di uno reale. L'unica cosa che non fa è creare ricevute: il denaro di prova non viene mai attribuito a un contratto.",
       "startTest": "Collega prova",
       "connectFailed": "Impossibile avviare il collegamento di prova.",
+      "connected": "Collegamento di prova completato — i movimenti importati compaiono in Finanze, ma non generano ricevute.",
+      "failed": "Il collegamento di prova non è stato completato. Controlla il log del server.",
       "existing": "{count} collegamenti di prova",
       "connectionSummary": "{status} · {accounts} conti · {movements} movimenti",
       "removeLabel": "Rimuovi {name}",

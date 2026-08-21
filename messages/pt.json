@@ -416,6 +416,8 @@
       "testHelp": "Uma ligação de teste percorre o mesmo consentimento e a mesma importação de uma ligação real. A única coisa que não faz é criar recibos: dinheiro de teste nunca é atribuído a um contrato.",
       "startTest": "Ligar teste",
       "connectFailed": "Não foi possível iniciar a ligação de teste.",
+      "connected": "Ligação de teste concluída — os movimentos importados aparecem em Finanças, mas não geram recibos.",
+      "failed": "A ligação de teste não foi concluída. Verifique o registo do servidor.",
       "existing": "{count} ligações de teste",
       "connectionSummary": "{status} · {accounts} contas · {movements} movimentos",
       "removeLabel": "Remover {name}",
