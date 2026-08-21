@@ -36,6 +36,12 @@ export const EXPENSE_CATEGORIES = [
   "management_fees", // Property management company fees
   "legal_fees", // Legal costs (lease drafting, disputes)
   "accountant_fees", // Tax advisor / TOC / gestor fees
+  // Instance / tooling — the cost of running this software, recorded as an expense so it flows
+  // through the same pipeline and reaches reports beside property costs. Deliberately absent from
+  // DEDUCTIBLE_CATEGORIES below: whether self-hosting is deductible against PT Categoria F or ES
+  // Rendimientos del Capital Inmobiliario is a question for a TOC/gestor, not for this file, and
+  // `isDeductible` is per-expense and editable when the answer is yes.
+  "software_hosting",
   // Fallback
   "other",
 ] as const;

@@ -41,6 +41,13 @@ exactly like a deploy that did nothing. Check `Actions → Deploy to GHCR` if in
 `https://<your-host>/api/info` to see the version and commit baked into the image that is
 actually running.
 
+> `/api/info` reported `dev` / `unknown` on every correctly built image until the runner stage
+> carried the build args into the process — the ARGs reached the image labels but not the running
+> app. It reports honestly from that build onward. Two checks that do not depend on it:
+> `https://<your-host>/version.json`, a static file written at build time, and
+> `docker inspect ghcr.io/jigle/situs:main --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'`.
+> A locally built image without `--build-arg` reports `unknown` for all three, which is correct.
+
 > **Set the image pull policy to `Always` if you use `:main`.** It is a moving pointer, so with
 > `IfNotPresent` the node keeps serving the cached layer and the tag appears frozen. Pinning
 > `:sha-<short>` avoids the question entirely, because the name changes on every deploy.

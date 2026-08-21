@@ -110,6 +110,14 @@ VOLUME /app/data
 
 ENV NODE_ENV=production
 
+# The ARGs above reach the LABELs but NOT the running process: a multi-stage build does not
+# inherit ENV from `builder`, where these are also set. Without these three lines /api/info
+# reports version "dev" and commit "unknown" on a correctly built image, which is what it did
+# while someone used it to check whether a deploy had landed.
+ENV BUILD_VERSION=${BUILD_VERSION}
+ENV GIT_COMMIT=${GIT_COMMIT}
+ENV BUILD_TIME=${BUILD_TIME}
+
 RUN addgroup -g 1001 -S nextjs
 RUN adduser -u 1001 -S nextjs -G nextjs
 

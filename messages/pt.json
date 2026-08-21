@@ -262,7 +262,9 @@
       },
       "bankNoProviderTitle": "Ligação bancária não configurada",
       "bankNoProviderBody": "Esta instância não tem credenciais Enable Banking, por isso os movimentos não podem ser importados automaticamente. Defina ENABLE_BANKING_APPLICATION_ID e ENABLE_BANKING_PRIVATE_KEY_FILE a apontar para o .pem montado e reinicie.",
-      "bankNoProviderCsv": "Entretanto a importação CSV funciona, em Finanças › Movimentos Bancários — a correspondência, os recibos e o livro de rendas comportam-se exatamente da mesma forma."
+      "bankNoProviderCsv": "Entretanto a importação CSV funciona, em Finanças › Movimentos Bancários — a correspondência, os recibos e o livro de rendas comportam-se exatamente da mesma forma.",
+      "systemStatusMovedHelp": "O estado da instância passou para a área de administração, separada da aplicação.",
+      "openAdmin": "Abrir administração"
     }
   },
   "gdpr": {
@@ -301,6 +303,85 @@
       "bank": "Movimentos bancários",
       "bank_provider": "Fornecedor bancário",
       "tax": "Autoridade fiscal — {country}"
+    },
+    "shell": {
+      "title": "Administração da instância",
+      "backToApp": "Voltar à aplicação",
+      "nav": {
+        "status": "Estado",
+        "users": "Contas",
+        "signIn": "Acesso",
+        "metrics": "Métricas"
+      }
+    },
+    "users": {
+      "title": "Contas",
+      "subtitle": "Todos os que podem entrar nesta instância.",
+      "loading": "A carregar…",
+      "loadFailed": "Não foi possível carregar as contas.",
+      "deleteFailed": "Não foi possível remover essa conta.",
+      "you": "você",
+      "joined": "criada a {date}",
+      "owns": "{count} registos",
+      "remove": "Remover",
+      "cancel": "Cancelar",
+      "confirmAction": "Remover conta",
+      "cannotDeleteSelf": "Não pode remover a sua própria conta aqui.",
+      "confirmTitle": "Remover {email}?",
+      "confirmBody": "Isto elimina a conta e tudo o que lhe pertence:",
+      "ownsNothing": "Esta conta não tem registos.",
+      "countProperties": "{count} imóveis",
+      "countTenants": "{count} inquilinos",
+      "countLeases": "{count} contratos",
+      "countReceipts": "{count} recibos",
+      "irreversible": "Isto não pode ser desfeito."
+    },
+    "signIn": {
+      "title": "Acesso",
+      "subtitle": "Como se pode entrar nesta instância.",
+      "loading": "A carregar…",
+      "loadFailed": "Não foi possível carregar o estado de acesso.",
+      "registrationClosed": "Registo fechado",
+      "registrationClosedHelp": "Só as contas existentes, e os emails na lista de permissões, podem entrar.",
+      "registrationOpen": "Registo aberto",
+      "registrationOpenHelp": "Ainda não existe nenhuma conta, por isso o próximo acesso reclama esta instância como administrador.",
+      "accounts": "{total} contas, {admins} delas administradores.",
+      "providers": "Métodos de acesso",
+      "provider": {
+        "credentials": "Email e palavra-passe",
+        "google": "Google"
+      },
+      "configured": "configurado",
+      "notConfigured": "não configurado",
+      "providersHelp": "Definidos no ambiente, não aqui. Um interruptor que desativasse o método com que está autenticado deixá-lo-ia sem forma de voltar a entrar.",
+      "allowlist": "Emails permitidos",
+      "allowlistEmpty": "Nenhum — apenas contas existentes.",
+      "allowlistHelp": "AUTH_ALLOWED_EMAILS. Aditivo: estes podem entrar mesmo com o registo fechado."
+    },
+    "metrics": {
+      "title": "Métricas",
+      "loading": "A carregar…",
+      "loadFailed": "Não foi possível carregar as métricas.",
+      "period": "{start} a {end}",
+      "unknown": "desconhecido",
+      "portfolioTitle": "Carteira",
+      "portfolioScope": "A sua própria carteira — não somada entre contas.",
+      "portfolioUnavailable": "Os valores da carteira não estão disponíveis.",
+      "rent": "Renda",
+      "income": "Receita",
+      "expenses": "Despesas",
+      "net": "Líquido",
+      "margin": "{value}% de margem",
+      "runningCosts": "Custos de funcionamento neste período: {amount}, registados em {category}.",
+      "runningCostsNone": "Sem custos de funcionamento registados. Adicione-os como despesas em {category}.",
+      "instanceTitle": "Instância",
+      "instanceScope": "Esta instalação, em todas as contas.",
+      "accounts": "Contas",
+      "admins": "{count} administrador",
+      "database": "Base de dados",
+      "documents": "Documentos",
+      "auditEntries": "Registos de auditoria",
+      "activation": "Últimos 30 dias: {paid} recibos pagos, {issued} recibos de renda emitidos."
     }
   },
   "navigation": {
@@ -1535,6 +1616,7 @@
       "taxes": "Impostos",
       "mortgage": "Hipoteca",
       "management": "Taxas de Gestão",
+      "software_hosting": "Software e alojamento",
       "other": "Outro",
       "imi": "IMI – Imposto Municipal sobre Imóveis",
       "ibi": "IBI – Imposto sobre Bens Imóveis (ES)",
