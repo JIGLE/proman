@@ -308,6 +308,7 @@
       "title": "Instance administration",
       "backToApp": "Back to app",
       "nav": {
+        "overview": "Overview",
         "status": "Status",
         "users": "Accounts",
         "signIn": "Sign-in",
@@ -383,6 +384,50 @@
       "documents": "Documents",
       "auditEntries": "Audit entries",
       "activation": "Last 30 days: {paid} receipts paid, {issued} rent receipts issued."
+    },
+    "controlCenter": {
+      "title": "Control center",
+      "openDetail": "Detail",
+      "unavailable": "This panel could not be loaded.",
+      "registration": "Registration",
+      "rent": "Rent",
+      "expenses": "Expenses",
+      "net": "Net",
+      "auditEntries": "Audit entries",
+      "adminOwnsNothing": "· administrator owning nothing"
+    },
+    "bank": {
+      "title": "Bank connection",
+      "runCheck": "Check",
+      "idle": "Check the credentials, the banks you can reach, and the registered return URL. Changes nothing.",
+      "checkFailed": "The check could not be run.",
+      "notConfigured": "No credentials on this instance — CSV import only.",
+      "auth": "Authentication",
+      "authOk": "Accepted",
+      "application": "Application",
+      "environment": "Environment",
+      "redirect": "Return URL",
+      "redirectOk": "Registered",
+      "redirectMissing": "Not registered",
+      "redirectHint": "Add this exact URL to the application in the provider's control panel:",
+      "institutions": "Banks",
+      "institutionsNone": "None reachable",
+      "chooseInstitution": "Choose a bank",
+      "testHelp": "A test connection runs the same consent and the same import as a real one. The only thing it does not do is create receipts: test money is never allocated to a lease.",
+      "startTest": "Connect test",
+      "connectFailed": "The test connection could not be started.",
+      "existing": "{count} test connections",
+      "connectionSummary": "{status} · {accounts} accounts · {movements} movements",
+      "removeLabel": "Remove {name}",
+      "removed": "Removed: {accounts} accounts, {movements} movements.",
+      "removeFailed": "That connection could not be removed.",
+      "authError": {
+        "network_unreachable": "Provider unreachable",
+        "malformed_json": "Invalid response",
+        "http_401": "Key does not match the application",
+        "http_403": "Application not permitted",
+        "unknown": "Failed"
+      }
     }
   },
   "navigation": {

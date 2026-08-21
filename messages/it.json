@@ -308,6 +308,7 @@
       "title": "Amministrazione dell'istanza",
       "backToApp": "Torna all'app",
       "nav": {
+        "overview": "Panoramica",
         "status": "Stato",
         "users": "Account",
         "signIn": "Accesso",
@@ -383,6 +384,50 @@
       "documents": "Documenti",
       "auditEntries": "Voci di audit",
       "activation": "Ultimi 30 giorni: {paid} ricevute pagate, {issued} ricevute di affitto emesse."
+    },
+    "controlCenter": {
+      "title": "Centro di controllo",
+      "openDetail": "Dettaglio",
+      "unavailable": "Impossibile caricare questo pannello.",
+      "registration": "Registrazione",
+      "rent": "Affitto",
+      "expenses": "Spese",
+      "net": "Netto",
+      "auditEntries": "Voci di audit",
+      "adminOwnsNothing": "· amministratore senza dati"
+    },
+    "bank": {
+      "title": "Collegamento bancario",
+      "runCheck": "Verifica",
+      "idle": "Verifica le credenziali, le banche raggiungibili e l'URL di ritorno registrato. Non modifica nulla.",
+      "checkFailed": "Impossibile eseguire la verifica.",
+      "notConfigured": "Nessuna credenziale su questa istanza — solo importazione CSV.",
+      "auth": "Autenticazione",
+      "authOk": "Accettata",
+      "application": "Applicazione",
+      "environment": "Ambiente",
+      "redirect": "URL di ritorno",
+      "redirectOk": "Registrato",
+      "redirectMissing": "Non registrato",
+      "redirectHint": "Aggiungi questo URL esatto all'applicazione nel pannello del fornitore:",
+      "institutions": "Banche",
+      "institutionsNone": "Nessuna raggiungibile",
+      "chooseInstitution": "Scegli una banca",
+      "testHelp": "Un collegamento di prova segue lo stesso consenso e la stessa importazione di uno reale. L'unica cosa che non fa è creare ricevute: il denaro di prova non viene mai attribuito a un contratto.",
+      "startTest": "Collega prova",
+      "connectFailed": "Impossibile avviare il collegamento di prova.",
+      "existing": "{count} collegamenti di prova",
+      "connectionSummary": "{status} · {accounts} conti · {movements} movimenti",
+      "removeLabel": "Rimuovi {name}",
+      "removed": "Rimossi: {accounts} conti, {movements} movimenti.",
+      "removeFailed": "Impossibile rimuovere quel collegamento.",
+      "authError": {
+        "network_unreachable": "Fornitore irraggiungibile",
+        "malformed_json": "Risposta non valida",
+        "http_401": "La chiave non corrisponde all'applicazione",
+        "http_403": "Applicazione non autorizzata",
+        "unknown": "Non riuscita"
+      }
     }
   },
   "navigation": {

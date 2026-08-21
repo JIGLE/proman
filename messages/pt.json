@@ -308,6 +308,7 @@
       "title": "Administração da instância",
       "backToApp": "Voltar à aplicação",
       "nav": {
+        "overview": "Visão geral",
         "status": "Estado",
         "users": "Contas",
         "signIn": "Acesso",
@@ -383,6 +384,50 @@
       "documents": "Documentos",
       "auditEntries": "Registos de auditoria",
       "activation": "Últimos 30 dias: {paid} recibos pagos, {issued} recibos de renda emitidos."
+    },
+    "controlCenter": {
+      "title": "Centro de controlo",
+      "openDetail": "Detalhe",
+      "unavailable": "Não foi possível carregar este painel.",
+      "registration": "Registo",
+      "rent": "Renda",
+      "expenses": "Despesas",
+      "net": "Líquido",
+      "auditEntries": "Registos de auditoria",
+      "adminOwnsNothing": "· administrador sem registos"
+    },
+    "bank": {
+      "title": "Ligação bancária",
+      "runCheck": "Verificar",
+      "idle": "Verifique as credenciais, os bancos acessíveis e o URL de retorno registado. Não altera nada.",
+      "checkFailed": "Não foi possível executar a verificação.",
+      "notConfigured": "Sem credenciais nesta instância — apenas importação CSV.",
+      "auth": "Autenticação",
+      "authOk": "Aceite",
+      "application": "Aplicação",
+      "environment": "Ambiente",
+      "redirect": "URL de retorno",
+      "redirectOk": "Registado",
+      "redirectMissing": "Não registado",
+      "redirectHint": "Adicione este URL exato à aplicação no painel do fornecedor:",
+      "institutions": "Bancos",
+      "institutionsNone": "Nenhum acessível",
+      "chooseInstitution": "Escolha um banco",
+      "testHelp": "Uma ligação de teste percorre o mesmo consentimento e a mesma importação de uma ligação real. A única coisa que não faz é criar recibos: dinheiro de teste nunca é atribuído a um contrato.",
+      "startTest": "Ligar teste",
+      "connectFailed": "Não foi possível iniciar a ligação de teste.",
+      "existing": "{count} ligações de teste",
+      "connectionSummary": "{status} · {accounts} contas · {movements} movimentos",
+      "removeLabel": "Remover {name}",
+      "removed": "Removido: {accounts} contas, {movements} movimentos.",
+      "removeFailed": "Não foi possível remover essa ligação.",
+      "authError": {
+        "network_unreachable": "Fornecedor inacessível",
+        "malformed_json": "Resposta inválida",
+        "http_401": "Chave não corresponde à aplicação",
+        "http_403": "Aplicação sem permissão",
+        "unknown": "Falhou"
+      }
     }
   },
   "navigation": {

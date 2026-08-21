@@ -32,7 +32,7 @@ import type { StatusSeverity, SystemStatus } from "@/lib/services/admin/system-s
  * `warning` and `simulated` actually stand out.
  */
 
-interface SeverityStyle {
+export interface SeverityStyle {
   /** Badge fill + text, used only where a row is not `ok`. */
   chip: string;
   /** Icon and left-rule colour. Kept separate from `chip`: this used to be recovered by
@@ -44,7 +44,7 @@ interface SeverityStyle {
   icon: typeof Info;
 }
 
-const SEVERITY_STYLE: Record<StatusSeverity, SeverityStyle> = {
+export const SEVERITY_STYLE: Record<StatusSeverity, SeverityStyle> = {
   ok: {
     chip: "bg-[var(--semantic-success-soft)] text-[var(--semantic-success-readable)]",
     accent: "text-[var(--semantic-success-readable)]",
@@ -72,7 +72,7 @@ const SEVERITY_STYLE: Record<StatusSeverity, SeverityStyle> = {
 };
 
 /** Order the summary reads in: what needs a human first, what is merely true last. */
-const SUMMARY_ORDER: StatusSeverity[] = ["error", "warning", "simulated", "ok"];
+export const SUMMARY_ORDER: StatusSeverity[] = ["error", "warning", "simulated", "ok"];
 
 export function SystemStatusView() {
   const t = useTranslations("admin");

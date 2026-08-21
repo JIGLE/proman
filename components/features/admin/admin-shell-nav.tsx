@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils/utils";
  * without the locale prefix being hardcoded anywhere.
  */
 const SECTIONS = [
-  { key: "status", href: "/admin" },
+  { key: "overview", href: "/admin" },
+  { key: "status", href: "/admin/status" },
   { key: "users", href: "/admin/users" },
   { key: "signIn", href: "/admin/sign-in" },
   { key: "metrics", href: "/admin/metrics" },

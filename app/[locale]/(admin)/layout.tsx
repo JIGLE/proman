@@ -22,12 +22,24 @@ import { AdminShellNav } from "@/components/features/admin/admin-shell-nav";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <PortalAccessGuard>
-      <div className="flex min-h-screen flex-col bg-[var(--color-canvas)]">
+      {/*
+        Above `lg` the shell is exactly one viewport tall and clips: the control center is a grid
+        sized to its container, and each panel scrolls inside its own box. `min-h-0` on the main
+        element is the part that makes that work — without it a flex child refuses to shrink below
+        its content and the overflow escapes to the page, which is the whole thing being avoided.
+
+        Below `lg` it reverts to ordinary flow. A phone has no viewport to fit a control centre
+        into, and forcing one produces several nested scroll areas competing for the same gesture.
+
+        The width cap rises from `5xl` to `7xl`: five panels across two rows need the room, and
+        the detail pages that kept the narrower measure set it themselves.
+      */}
+      <div className="flex min-h-screen flex-col bg-[var(--color-canvas)] lg:h-screen lg:min-h-0 lg:overflow-hidden">
         <SkipLink href="#admin-content">Skip to main content</SkipLink>
         <AdminShellNav />
         <main
           id="admin-content"
-          className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8"
+          className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:min-h-0 lg:overflow-hidden lg:py-6"
         >
           {children}
         </main>

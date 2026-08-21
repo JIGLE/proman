@@ -308,6 +308,7 @@
       "title": "Administración de la instancia",
       "backToApp": "Volver a la aplicación",
       "nav": {
+        "overview": "Resumen",
         "status": "Estado",
         "users": "Cuentas",
         "signIn": "Acceso",
@@ -383,6 +384,50 @@
       "documents": "Documentos",
       "auditEntries": "Registros de auditoría",
       "activation": "Últimos 30 días: {paid} recibos pagados, {issued} recibos de alquiler emitidos."
+    },
+    "controlCenter": {
+      "title": "Centro de control",
+      "openDetail": "Detalle",
+      "unavailable": "No se ha podido cargar este panel.",
+      "registration": "Registro",
+      "rent": "Alquiler",
+      "expenses": "Gastos",
+      "net": "Neto",
+      "auditEntries": "Registros de auditoría",
+      "adminOwnsNothing": "· administrador sin registros"
+    },
+    "bank": {
+      "title": "Conexión bancaria",
+      "runCheck": "Comprobar",
+      "idle": "Comprueba las credenciales, los bancos accesibles y la URL de retorno registrada. No cambia nada.",
+      "checkFailed": "No se ha podido ejecutar la comprobación.",
+      "notConfigured": "Sin credenciales en esta instancia: solo importación CSV.",
+      "auth": "Autenticación",
+      "authOk": "Aceptada",
+      "application": "Aplicación",
+      "environment": "Entorno",
+      "redirect": "URL de retorno",
+      "redirectOk": "Registrada",
+      "redirectMissing": "No registrada",
+      "redirectHint": "Añade esta URL exacta a la aplicación en el panel del proveedor:",
+      "institutions": "Bancos",
+      "institutionsNone": "Ninguno accesible",
+      "chooseInstitution": "Elige un banco",
+      "testHelp": "Una conexión de prueba recorre el mismo consentimiento y la misma importación que una real. Lo único que no hace es crear recibos: el dinero de prueba nunca se asigna a un contrato.",
+      "startTest": "Conectar prueba",
+      "connectFailed": "No se ha podido iniciar la conexión de prueba.",
+      "existing": "{count} conexiones de prueba",
+      "connectionSummary": "{status} · {accounts} cuentas · {movements} movimientos",
+      "removeLabel": "Eliminar {name}",
+      "removed": "Eliminado: {accounts} cuentas, {movements} movimientos.",
+      "removeFailed": "No se ha podido eliminar esa conexión.",
+      "authError": {
+        "network_unreachable": "Proveedor inaccesible",
+        "malformed_json": "Respuesta no válida",
+        "http_401": "La clave no coincide con la aplicación",
+        "http_403": "Aplicación sin permiso",
+        "unknown": "Ha fallado"
+      }
     }
   },
   "navigation": {
