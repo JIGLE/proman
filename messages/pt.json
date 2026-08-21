@@ -319,6 +319,7 @@
       "subtitle": "Todos os que podem entrar nesta instância.",
       "loading": "A carregar…",
       "loadFailed": "Não foi possível carregar as contas.",
+      "empty": "Nenhuma conta encontrada — isto não deveria acontecer, pois a sua está a ser usada agora.",
       "deleteFailed": "Não foi possível remover essa conta.",
       "you": "você",
       "joined": "criada a {date}",

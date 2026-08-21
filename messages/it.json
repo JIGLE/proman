@@ -319,6 +319,7 @@
       "subtitle": "Tutti coloro che possono accedere a questa istanza.",
       "loading": "Caricamento…",
       "loadFailed": "Impossibile caricare gli account.",
+      "empty": "Nessun account trovato — non dovrebbe essere possibile, dato che ne stai usando uno.",
       "deleteFailed": "Impossibile rimuovere quell'account.",
       "you": "tu",
       "joined": "creato il {date}",

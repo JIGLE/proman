@@ -319,6 +319,7 @@
       "subtitle": "Everyone who can sign in to this instance.",
       "loading": "Loading…",
       "loadFailed": "Could not load accounts.",
+      "empty": "No accounts found — which should not be possible, since you are signed in to one.",
       "deleteFailed": "Could not remove that account.",
       "you": "you",
       "joined": "joined {date}",

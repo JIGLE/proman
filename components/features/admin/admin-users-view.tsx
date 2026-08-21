@@ -53,8 +53,11 @@ export function AdminUsersView() {
     setLoading(true);
     setError(null);
     try {
-      const body = await apiFetch<{ data?: { users?: AdminUserRow[] } }>("/api/admin/users");
-      setUsers(body?.data?.users ?? []);
+      // `apiFetch` already unwraps the envelope's `data` field, so reading `.data` again here
+      // always yielded `undefined` and the list rendered empty on every load — this page had
+      // never shown a single account. The generic said `{ data?: ... }`, so it type-checked.
+      const body = await apiFetch<{ users?: AdminUserRow[] }>("/api/admin/users");
+      setUsers(body?.users ?? []);
     } catch {
       setError(t("loadFailed"));
     } finally {
@@ -106,6 +109,10 @@ export function AdminUsersView() {
 
       {loading ? (
         <p className="text-sm text-muted-foreground">{t("loading")}</p>
+      ) : users.length === 0 ? (
+        <p className="rounded-md border border-dashed border-[var(--color-border)] px-3 py-6 text-center text-sm text-muted-foreground">
+          {t("empty")}
+        </p>
       ) : (
         <ul className="space-y-2">
           {users.map((user) => (
