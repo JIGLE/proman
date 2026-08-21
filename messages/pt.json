@@ -310,7 +310,8 @@
       "nav": {
         "status": "Estado",
         "users": "Contas",
-        "signIn": "Acesso"
+        "signIn": "Acesso",
+        "metrics": "Métricas"
       }
     },
     "users": {
@@ -356,6 +357,31 @@
       "allowlist": "Emails permitidos",
       "allowlistEmpty": "Nenhum — apenas contas existentes.",
       "allowlistHelp": "AUTH_ALLOWED_EMAILS. Aditivo: estes podem entrar mesmo com o registo fechado."
+    },
+    "metrics": {
+      "title": "Métricas",
+      "loading": "A carregar…",
+      "loadFailed": "Não foi possível carregar as métricas.",
+      "period": "{start} a {end}",
+      "unknown": "desconhecido",
+      "portfolioTitle": "Carteira",
+      "portfolioScope": "A sua própria carteira — não somada entre contas.",
+      "portfolioUnavailable": "Os valores da carteira não estão disponíveis.",
+      "rent": "Renda",
+      "income": "Receita",
+      "expenses": "Despesas",
+      "net": "Líquido",
+      "margin": "{value}% de margem",
+      "runningCosts": "Custos de funcionamento neste período: {amount}, registados em {category}.",
+      "runningCostsNone": "Sem custos de funcionamento registados. Adicione-os como despesas em {category}.",
+      "instanceTitle": "Instância",
+      "instanceScope": "Esta instalação, em todas as contas.",
+      "accounts": "Contas",
+      "admins": "{count} administrador",
+      "database": "Base de dados",
+      "documents": "Documentos",
+      "auditEntries": "Registos de auditoria",
+      "activation": "Últimos 30 dias: {paid} recibos pagos, {issued} recibos de renda emitidos."
     }
   },
   "navigation": {
@@ -1590,6 +1616,7 @@
       "taxes": "Impostos",
       "mortgage": "Hipoteca",
       "management": "Taxas de Gestão",
+      "software_hosting": "Software e alojamento",
       "other": "Outro",
       "imi": "IMI – Imposto Municipal sobre Imóveis",
       "ibi": "IBI – Imposto sobre Bens Imóveis (ES)",

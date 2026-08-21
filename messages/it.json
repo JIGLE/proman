@@ -310,7 +310,8 @@
       "nav": {
         "status": "Stato",
         "users": "Account",
-        "signIn": "Accesso"
+        "signIn": "Accesso",
+        "metrics": "Metriche"
       }
     },
     "users": {
@@ -356,6 +357,31 @@
       "allowlist": "Email consentite",
       "allowlistEmpty": "Nessuna — solo account esistenti.",
       "allowlistHelp": "AUTH_ALLOWED_EMAILS. Additivo: queste possono accedere anche a registrazione chiusa."
+    },
+    "metrics": {
+      "title": "Metriche",
+      "loading": "Caricamento…",
+      "loadFailed": "Impossibile caricare le metriche.",
+      "period": "{start} al {end}",
+      "unknown": "sconosciuto",
+      "portfolioTitle": "Portafoglio",
+      "portfolioScope": "Il tuo portafoglio — non sommato tra gli account.",
+      "portfolioUnavailable": "I dati del portafoglio non sono disponibili.",
+      "rent": "Affitto",
+      "income": "Entrate",
+      "expenses": "Spese",
+      "net": "Netto",
+      "margin": "{value}% di margine",
+      "runningCosts": "Costi di gestione in questo periodo: {amount}, registrati in {category}.",
+      "runningCostsNone": "Nessun costo di gestione registrato. Aggiungili come spese in {category}.",
+      "instanceTitle": "Istanza",
+      "instanceScope": "Questa installazione, su tutti gli account.",
+      "accounts": "Account",
+      "admins": "{count} amministratore",
+      "database": "Database",
+      "documents": "Documenti",
+      "auditEntries": "Voci di audit",
+      "activation": "Ultimi 30 giorni: {paid} ricevute pagate, {issued} ricevute di affitto emesse."
     }
   },
   "navigation": {
@@ -1590,6 +1616,7 @@
       "taxes": "Imposte",
       "mortgage": "Mutuo",
       "management": "Spese di gestione",
+      "software_hosting": "Software e hosting",
       "other": "Altro",
       "imi": "IMI – Imposta immobiliare (PT)",
       "ibi": "IBI – Imposta immobiliare (ES)",

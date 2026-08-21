@@ -310,7 +310,8 @@
       "nav": {
         "status": "Estado",
         "users": "Cuentas",
-        "signIn": "Acceso"
+        "signIn": "Acceso",
+        "metrics": "Métricas"
       }
     },
     "users": {
@@ -356,6 +357,31 @@
       "allowlist": "Correos permitidos",
       "allowlistEmpty": "Ninguno — solo cuentas existentes.",
       "allowlistHelp": "AUTH_ALLOWED_EMAILS. Aditivo: estos pueden entrar aunque el registro esté cerrado."
+    },
+    "metrics": {
+      "title": "Métricas",
+      "loading": "Cargando…",
+      "loadFailed": "No se pudieron cargar las métricas.",
+      "period": "{start} a {end}",
+      "unknown": "desconocido",
+      "portfolioTitle": "Cartera",
+      "portfolioScope": "Tu propia cartera — no sumada entre cuentas.",
+      "portfolioUnavailable": "Las cifras de la cartera no están disponibles.",
+      "rent": "Alquiler",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "net": "Neto",
+      "margin": "{value}% de margen",
+      "runningCosts": "Costes de funcionamiento en este periodo: {amount}, registrados en {category}.",
+      "runningCostsNone": "Sin costes de funcionamiento registrados. Añádelos como gastos en {category}.",
+      "instanceTitle": "Instancia",
+      "instanceScope": "Esta instalación, en todas las cuentas.",
+      "accounts": "Cuentas",
+      "admins": "{count} administrador",
+      "database": "Base de datos",
+      "documents": "Documentos",
+      "auditEntries": "Registros de auditoría",
+      "activation": "Últimos 30 días: {paid} recibos pagados, {issued} recibos de alquiler emitidos."
     }
   },
   "navigation": {
@@ -1590,6 +1616,7 @@
       "taxes": "Impuestos",
       "mortgage": "Hipoteca",
       "management": "Honorarios de Gestión",
+      "software_hosting": "Software y alojamiento",
       "other": "Otro",
       "imi": "IMI – Impuesto Municipal PT",
       "ibi": "IBI – Impuesto sobre Bienes Inmuebles",

@@ -21,6 +21,7 @@ const SECTIONS = [
   { key: "status", href: "/admin" },
   { key: "users", href: "/admin/users" },
   { key: "signIn", href: "/admin/sign-in" },
+  { key: "metrics", href: "/admin/metrics" },
 ] as const;
 
 export function AdminShellNav() {
