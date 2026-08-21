@@ -22,7 +22,7 @@ import { AdminShellNav } from "@/components/features/admin/admin-shell-nav";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <PortalAccessGuard>
-      <div className="flex min-h-screen flex-col bg-[var(--color-muted)]">
+      <div className="flex min-h-screen flex-col bg-[var(--color-canvas)]">
         <SkipLink href="#admin-content">Skip to main content</SkipLink>
         <AdminShellNav />
         <main
