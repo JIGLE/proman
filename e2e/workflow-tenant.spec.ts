@@ -32,7 +32,7 @@ test.describe("Critical Path: Tenant management", () => {
       if (msg.type() === "error") console.error("Browser error:", msg.text());
     });
 
-    await page.goto("/en/people");
+    await page.goto("/people");
     await expect(page).toHaveURL(/\/people/);
 
     // Open Add Tenant dialog
@@ -90,7 +90,7 @@ test.describe("Critical Path: Tenant management", () => {
   });
 
   test("should show validation errors for missing required fields", async ({ page }) => {
-    await page.goto("/en/people");
+    await page.goto("/people");
     await page.getByRole("button", { name: "Add Tenant" }).first().click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
@@ -110,7 +110,7 @@ test.describe("Critical Path: Tenant management", () => {
   });
 
   test("should close dialog when cancel is clicked", async ({ page }) => {
-    await page.goto("/en/people");
+    await page.goto("/people");
     await page.getByRole("button", { name: "Add Tenant" }).first().click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();

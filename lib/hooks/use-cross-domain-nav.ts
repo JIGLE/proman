@@ -157,7 +157,7 @@ export function getSectionFromPath(pathname: string): Section | null {
 export function buildLocalePath(locale: string, path: string): string {
   // Ensure path starts with /
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `/${locale}${normalizedPath}`;
+  return normalizedPath;
 }
 
 export default useCrossDomainNav;

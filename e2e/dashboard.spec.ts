@@ -17,7 +17,7 @@ test.use({ storageState: "playwright/.auth/user.json" });
  */
 test.describe("Dashboard", () => {
   test("should display the main dashboard", async ({ page }) => {
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     await expect(page).toHaveURL(/\/en\/dashboard/);
@@ -26,7 +26,7 @@ test.describe("Dashboard", () => {
   });
 
   test("should navigate to Portfolio section", async ({ page }) => {
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const portfolioLink = page.getByRole("link", { name: /portfolio/i }).first();
@@ -38,7 +38,7 @@ test.describe("Dashboard", () => {
   });
 
   test("should navigate to People section", async ({ page }) => {
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const peopleLink = page.getByRole("link", { name: /people/i }).first();
@@ -55,7 +55,7 @@ test.describe("Dashboard", () => {
     // not rendered anywhere in the authenticated desktop shell — only in the mobile "More" sheet
     // (components/ui/mobile-nav.tsx:194), the auth pages and the landing page. On desktop the
     // control lives in Settings › Appearance, so test it where it actually is.
-    await page.goto("/en/settings?tab=appearance");
+    await page.goto("/settings?tab=appearance");
     await settle(page);
 
     // Anchor on the field, not on its current value: a locator filtered by `/english/i` stops

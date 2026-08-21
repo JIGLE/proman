@@ -49,7 +49,7 @@ export default function DemoPage() {
 
         // Step 3: Redirect to dashboard — no NextAuth sign-in needed
         setStatus("redirecting");
-        router.replace(`/${locale}/dashboard`);
+        router.replace("/dashboard");
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "An error occurred");

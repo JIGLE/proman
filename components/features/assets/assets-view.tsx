@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Building2,
@@ -71,9 +71,7 @@ export function AssetsView(): React.ReactElement {
   const { isOwnerPortal } = usePortalAccess();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const locale = pathname.split("/")[1] || "pt";
   const { properties, leases, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
   const t = useTranslations("portfolio");
@@ -85,7 +83,7 @@ export function AssetsView(): React.ReactElement {
   useEffect(() => {
     if (searchParams.get("action") === "create-property") {
       propertiesViewRef.current?.openDialog();
-      router.replace(`/${locale}/portfolio`);
+      router.replace("/portfolio");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -175,15 +173,15 @@ export function AssetsView(): React.ReactElement {
                 {tenantHome.property?.name ?? t("tenant.myHome")}
               </h1>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => router.push(`/${locale}/financials`)}>
+                <Button variant="outline" onClick={() => router.push("/financials")}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   {t("tenant.payments")}
                 </Button>
-                <Button variant="outline" onClick={() => router.push(`/${locale}/leases`)}>
+                <Button variant="outline" onClick={() => router.push("/leases")}>
                   <Receipt className="mr-2 h-4 w-4" />
                   {t("tenant.myLease")}
                 </Button>
-                <Button variant="outline" onClick={() => router.push(`/${locale}/documents`)}>
+                <Button variant="outline" onClick={() => router.push("/documents")}>
                   <FileText className="mr-2 h-4 w-4" />
                   {t("tenant.myDocuments")}
                 </Button>

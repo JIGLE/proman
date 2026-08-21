@@ -21,7 +21,7 @@ import { LineChart, DonutChart } from "@/components/ui/charts";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useRouter } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/utils";
 import { getPropertyTypeColor } from "@/lib/design-tokens";
 
@@ -38,7 +38,6 @@ export function InsightsView(): React.ReactElement {
   const { properties, tenants, receipts, leases } = state;
   const { formatCurrency } = useCurrency();
   const router = useRouter();
-  const locale = useLocale();
   const t = useTranslations("insights");
   const tMonths = useTranslations("calendar.months");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -239,7 +238,7 @@ export function InsightsView(): React.ReactElement {
                 variant="ghost"
                 size="sm"
                 className="gap-1 text-xs"
-                onClick={() => router.push(`/${locale}/leases`)}
+                onClick={() => router.push("/leases")}
               >
                 {t("viewAll")} <ArrowRight className="h-3 w-3" />
               </Button>

@@ -12,7 +12,6 @@ export const dynamic = "force-dynamic";
  * `normalizePortalPath` maps `/account` → `/settings` so `canAccessPortalPath` still permits
  * this URL for both roles; the redirect below is what a visitor actually follows.
  */
-export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  redirect(`/${locale}/settings?tab=account`);
+export default async function AccountPage() {
+  redirect("/settings?tab=account");
 }

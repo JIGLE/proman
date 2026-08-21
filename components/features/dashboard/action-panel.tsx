@@ -43,11 +43,11 @@ const severityAccent: Record<AlertSeverity, string> = {
   info: "text-[var(--semantic-info)]",
 };
 
-function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: string }) {
+function AlertRow({ alert }: { alert: ActionAlert; readonly locale: string }) {
   const Icon = alert.icon;
   return (
     <Link
-      href={`/${locale}${alert.href}`}
+      href={alert.href}
       className={cn(
         "alert-card transition-colors hover:brightness-[0.98]",
         severityAlertClass[alert.severity],

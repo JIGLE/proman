@@ -3,7 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Button } from "@/components/ui/button";
@@ -121,8 +121,7 @@ function AuthContent({ mode, demoLoginEnabled }: { mode: AuthMode; demoLoginEnab
   // this page also decides which locale the viewer lands in after signing in. The previous
   // `detectLocale()` sniffed the referrer and `navigator.language` against a hardcoded
   // ["pt","en","es"] list that omitted Italian, stranding `it` users on `/pt/dashboard`.
-  const locale = useLocale();
-  const destination = callbackUrl ?? `/${locale}/dashboard`;
+  const destination = callbackUrl ?? "/dashboard";
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -190,7 +189,7 @@ function AuthContent({ mode, demoLoginEnabled }: { mode: AuthMode; demoLoginEnab
           {/* Secondary: try the live demo — the lowest-friction path, no account */}
           <button
             type="button"
-            onClick={() => router.push(`/${locale}/demo?perspective=owner`)}
+            onClick={() => router.push("/demo?perspective=owner")}
             className="mt-3 flex h-12 w-full items-center justify-center gap-2 border border-[var(--color-border)] bg-transparent text-sm font-medium text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-hover)]"
           >
             <Sparkles className="h-4 w-4 text-[var(--country-highlight-readable)]" />

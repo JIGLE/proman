@@ -14,7 +14,7 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -66,9 +66,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
   const tForms = useTranslations("forms");
   const tActions = useTranslations("actions");
   const confirmDialog = useConfirmDialog();
-  const pathname = usePathname();
   const router = useRouter();
-  const locale = pathname.split("/")[1] || "pt";
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [formData, setFormData] = useState<TenantFormData>({
@@ -128,7 +126,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
         label: t("modal.recordPayment"),
         onClick: () => {
           onClose();
-          router.push(`/${locale}/financials?tenantId=${tenant.id}`);
+          router.push(`/financials?tenantId=${tenant.id}`);
         },
         icon: DollarSign,
         variant: "destructive" as const,
@@ -139,7 +137,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
         label: t("modal.renewLease"),
         onClick: () => {
           onClose();
-          router.push(`/${locale}/leases?action=renew&id=${activeLease.id}`);
+          router.push(`/leases?action=renew&id=${activeLease.id}`);
         },
         icon: Calendar,
         variant: "default" as const,
@@ -150,7 +148,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
         label: t("modal.addLease"),
         onClick: () => {
           onClose();
-          router.push(`/${locale}/leases?action=create&tenantId=${tenant.id}`);
+          router.push(`/leases?action=create&tenantId=${tenant.id}`);
         },
         icon: Wrench,
         variant: "default" as const,

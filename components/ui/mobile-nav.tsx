@@ -63,7 +63,7 @@ export function MobileBottomNav({
 
   const isItemActive = (href: string) => {
     if (!href) return false;
-    const fullPath = `/${currentLocale}${href}`;
+    const fullPath = href;
     return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
   };
 
@@ -108,7 +108,7 @@ export function MobileBottomNav({
             return (
               <Link
                 key={item.id}
-                href={`/${currentLocale}${item.href}`}
+                href={item.href}
                 onClick={() => onTabChange?.(item.id)}
                 className={tabItemClass(isActive)}
                 aria-label={item.label}
@@ -162,7 +162,7 @@ export function MobileBottomNav({
                       return (
                         <SheetClose asChild key={item.id}>
                           <Link
-                            href={`/${currentLocale}${item.href}`}
+                            href={item.href}
                             aria-current={isActive ? "page" : undefined}
                             className={cn(
                               "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
@@ -194,7 +194,7 @@ export function MobileBottomNav({
                     <LanguageSelector compact />
                   </div>
                   <button
-                    onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
+                    onClick={() => signOut({ callbackUrl: "/" })}
                     className="flex items-center gap-3 py-3 text-sm text-[var(--color-error)]"
                   >
                     <LogOut className="h-4 w-4" />
@@ -226,7 +226,6 @@ export function MobileTopBar(): React.ReactElement {
   const tNav = useTranslations("navigation");
   const { navigation } = usePortalAccess();
 
-  const currentLocale = pathname.split("/")[1] || "pt";
   // Path with the locale prefix stripped, e.g. "/portfolio/123".
   const routePath = `/${pathname.split("/").slice(2).join("/")}`;
 
@@ -247,7 +246,7 @@ export function MobileTopBar(): React.ReactElement {
       style={{ height: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
     >
       <Link
-        href={`/${currentLocale}/dashboard`}
+        href={"/dashboard"}
         aria-label="Situs — Home"
         className="flex shrink-0 items-center justify-center max-md:min-h-11 max-md:min-w-11"
       >

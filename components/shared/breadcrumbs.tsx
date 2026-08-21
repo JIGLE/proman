@@ -55,7 +55,6 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
   const segments = pathname.split("/").filter(Boolean);
 
   // First segment is the locale — skip it for display but keep for href building
-  const locale = segments[0] || "pt";
   const routeSegments = segments.slice(1);
 
   if (routeSegments.length <= 1) {
@@ -64,7 +63,7 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
   }
 
   const crumbs = routeSegments.map((segment, index) => {
-    const href = `/${locale}/${routeSegments.slice(0, index + 1).join("/")}`;
+    const href = `/${routeSegments.slice(0, index + 1).join("/")}`;
     const isLast = index === routeSegments.length - 1;
 
     // Check for overrides first (for dynamic segments like entity ids)
@@ -97,7 +96,7 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
     >
       {/* Home icon linking to dashboard */}
       <Link
-        href={`/${locale}/dashboard`}
+        href={"/dashboard"}
         className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
         aria-label={tNav("dashboard")}
       >

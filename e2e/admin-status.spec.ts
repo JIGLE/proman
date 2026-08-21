@@ -17,7 +17,7 @@ test.use({ storageState: "playwright/.auth/user.json" });
  * present, and the simulation disclosure is shown unconditionally.
  */
 test("renders independently of the account data fetch", async ({ page }) => {
-  await page.goto("/en/admin", { waitUntil: "domcontentloaded" });
+  await page.goto("/admin", { waitUntil: "domcontentloaded" });
 
   // Reachability is not incidental. `canAccessPortalPath` derives access from the nav list, so
   // before /admin was added there it silently redirected to /dashboard.
@@ -31,7 +31,7 @@ test("renders independently of the account data fetch", async ({ page }) => {
 });
 
 test("states plainly that no filing is real, whatever the checks say", async ({ page }) => {
-  await page.goto("/en/admin", { waitUntil: "domcontentloaded" });
+  await page.goto("/admin", { waitUntil: "domcontentloaded" });
 
   // Unconditional, not derived from any check. An operator should not have to infer from a
   // row's colour that nothing reaches a tax authority.
@@ -42,7 +42,7 @@ test("states plainly that no filing is real, whatever the checks say", async ({ 
 });
 
 test("reports every check group", async ({ page }) => {
-  await page.goto("/en/admin", { waitUntil: "domcontentloaded" });
+  await page.goto("/admin", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: /system status/i })).toBeVisible({
     timeout: 20000,
   });

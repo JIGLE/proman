@@ -2,7 +2,7 @@
 
 import { type ElementType, type ReactElement, useMemo, useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
@@ -35,7 +35,7 @@ import { getActiveLease } from "@/lib/utils/lease-helpers";
 
 // ─── Modelo 179 Alert ────────────────────────────────────────────────────────
 
-function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
+function Modelo179Alert(): ReactElement | null {
   const [missingCount, setMissingCount] = useState<number | null>(null);
   const [targetYear, setTargetYear] = useState<number | null>(null);
 
@@ -82,7 +82,7 @@ function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
 
   return (
     <Link
-      href={`/${locale}/compliance/modelo179`}
+      href={"/compliance/modelo179"}
       className="alert-card alert-warning transition-colors hover:brightness-[0.98]"
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -213,13 +213,11 @@ export function OverviewView({
   const { isOwnerPortal } = usePortalAccess();
   const { data: session } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
   const t = useTranslations("dashboard");
-  const locale = pathname.split("/")[1] || "pt";
 
   const { properties = [], tenants = [], leases = [], receipts = [], loading } = state;
 
-  const navigate = (href: string) => router.push(`/${locale}${href}`);
+  const navigate = (href: string) => router.push(href);
   const handleAddProperty = () =>
     onAddProperty?.() ?? navigate("/portfolio?action=create-property");
   const handleAddTenant = () =>
@@ -533,7 +531,7 @@ export function OverviewView({
         )}
 
         {/* Compliance alert — seasonal, Jan–Mar only */}
-        <Modelo179Alert locale={locale} />
+        <Modelo179Alert />
       </div>
     );
   }

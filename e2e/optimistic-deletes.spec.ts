@@ -47,7 +47,7 @@ test.describe("No Native confirm() Calls", () => {
       dialog.dismiss();
     });
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
@@ -68,7 +68,7 @@ test.describe("No Native confirm() Calls", () => {
       dialog.dismiss();
     });
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
@@ -96,7 +96,7 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     // Page should load successfully
@@ -111,7 +111,7 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
@@ -127,7 +127,7 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en/dashboard");
+    await page.goto("/dashboard");
     await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();

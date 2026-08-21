@@ -14,8 +14,7 @@ export function PortalAccessGuard({ children }: { children: React.ReactNode }) {
       return;
     }
     if (!canAccessPath(pathname)) {
-      const locale = pathname.split("/")[1] || "pt";
-      router.replace(`/${locale}/dashboard`);
+      router.replace("/dashboard");
     }
   }, [canAccessPath, pathname, router]);
 

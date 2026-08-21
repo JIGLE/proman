@@ -394,7 +394,7 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
             className={cn(styles.ctaWrap1, styles.ctaPulse, "w-full sm:w-auto")}
           >
             <TrackedLandingLink
-              href={`/${locale}/demo?perspective=owner`}
+              href={"/demo?perspective=owner"}
               eventName="landing.demo_start"
               eventData={{ location: "hero_primary", perspective: "owner" }}
               className="block w-full sm:w-auto"

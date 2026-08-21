@@ -92,7 +92,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <p className="text-[var(--color-muted-foreground)]">{t("notFound")}</p>
-        <Button variant="outline" onClick={() => router.push(`/${locale}/people`)}>
+        <Button variant="outline" onClick={() => router.push("/people")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t("backToTenants")}
         </Button>
@@ -168,9 +168,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              router.push(`/${locale}/documents?search=${encodeURIComponent(tenant.name)}`)
-            }
+            onClick={() => router.push(`/documents?search=${encodeURIComponent(tenant.name)}`)}
           >
             <FileText className="h-4 w-4 mr-1" /> {t("documents")}
           </Button>

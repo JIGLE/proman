@@ -28,7 +28,7 @@ async function scanForSeriousViolations(page: import("@playwright/test").Page) {
 
 test.describe("Situs surfaces — accessibility (WCAG2A/AA)", () => {
   test("Finance › Bank Movements inbox has no critical/serious violations", async ({ page }) => {
-    await page.goto("/en/financials?tab=bank");
+    await page.goto("/financials?tab=bank");
     await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
@@ -37,7 +37,7 @@ test.describe("Situs surfaces — accessibility (WCAG2A/AA)", () => {
   test("Finance › Receipts (automation queue) has no critical/serious violations", async ({
     page,
   }) => {
-    await page.goto("/en/financials?tab=receipts");
+    await page.goto("/financials?tab=receipts");
     await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
@@ -46,21 +46,21 @@ test.describe("Situs surfaces — accessibility (WCAG2A/AA)", () => {
   test("Finance › Tax Summary (connector dashboard) has no critical/serious violations", async ({
     page,
   }) => {
-    await page.goto("/en/financials?tab=tax");
+    await page.goto("/financials?tab=tax");
     await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
 
   test("Documents view has no critical/serious violations", async ({ page }) => {
-    await page.goto("/en/documents");
+    await page.goto("/documents");
     await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
 
   test("Account page (audit trail) has no critical/serious violations", async ({ page }) => {
-    await page.goto("/en/account");
+    await page.goto("/account");
     await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   isDemoModeClient,
@@ -40,7 +40,6 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [demoPerspective, setDemoPerspective] = useState<PortalRole>("owner");
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
 
   const syncDemoState = useCallback(() => {
     const nextIsDemoMode = isDemoModeClient();
@@ -51,7 +50,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     syncDemoState();
-  }, [syncDemoState, pathname]);
+  }, [syncDemoState]);
 
   useEffect(() => {
     const handleDemoModeChanged = () => {
@@ -82,7 +81,6 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const exitDemo = useCallback(async () => {
     // Preserve current locale so the user returns to their selected language
-    const currentLocale = pathname.split("/")[1] || "pt";
     clearDemoCookieClient();
     clearDemoStore();
     sessionStorage.removeItem("situs_demo");
@@ -96,8 +94,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Auth may be down — that's fine, we still clear demo state
     }
-    router.push(`/${currentLocale}`);
-  }, [router, pathname]);
+    router.push("/");
+  }, [router]);
 
   return (
     <DemoContext.Provider

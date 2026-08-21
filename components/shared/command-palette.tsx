@@ -40,7 +40,6 @@ export function CommandPalette() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { portalRole, navigation } = usePortalAccess();
-  const locale = pathname.split("/")[1] || "pt";
 
   // Keyboard shortcut to open
   useEffect(() => {
@@ -77,7 +76,7 @@ export function CommandPalette() {
               description: t("addPropertyHelp"),
               icon: Plus,
               category: "action",
-              href: `/${locale}/portfolio`,
+              href: "/portfolio",
             },
             {
               id: "add-tenant",
@@ -85,7 +84,7 @@ export function CommandPalette() {
               description: t("addPersonHelp"),
               icon: Plus,
               category: "action",
-              href: `/${locale}/people`,
+              href: "/people",
             },
             {
               id: "record-payment",
@@ -93,7 +92,7 @@ export function CommandPalette() {
               description: t("recordPaymentHelp"),
               icon: DollarSign,
               category: "action",
-              href: `/${locale}/financials?tab=receipts`,
+              href: "/financials?tab=receipts",
             },
             {
               id: "review-documents",
@@ -101,7 +100,7 @@ export function CommandPalette() {
               description: t("reviewDocumentsHelp"),
               icon: FileText,
               category: "action",
-              href: `/${locale}/documents`,
+              href: "/documents",
             },
           ]
         : [];
@@ -112,7 +111,7 @@ export function CommandPalette() {
         label: item.label,
         icon: item.icon,
         category: "navigation" as const,
-        href: `/${locale}${item.href}`,
+        href: item.href,
       })),
     );
 
@@ -151,7 +150,6 @@ export function CommandPalette() {
     state.properties,
     state.tenants,
     state.owners,
-    locale,
     pathname,
     searchParams,
     t,

@@ -5,6 +5,6 @@ export default async function PropertyDetailRedirectPage({
 }: {
   params: Promise<{ locale: string; id: string }>;
 }) {
-  const { locale, id } = await params;
-  redirect(`/${locale}/portfolio/${id}`);
+  const { id } = await params;
+  redirect(`/portfolio/${id}`);
 }

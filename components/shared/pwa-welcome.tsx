@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * App-native welcome screen for the installed PWA. Only ever renders for signed-out visitors
- * (mounted from the already signed-out-gated `app/[locale]/page.tsx`) opening the app in
+ * (mounted from the already signed-out-gated `app/[_locale]/page.tsx`) opening the app in
  * standalone display mode — a normal browser tab always sees the full marketing page instead.
  *
  * Sequence: the Portal mark forms alone, dead-centre of the whole screen — then the orbiting
@@ -79,7 +79,7 @@ const riseIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: EASE_OUT } },
 };
 
-export function PwaWelcome({ locale }: { locale: string }) {
+export function PwaWelcome() {
   const [standalone, setStandalone] = useState(false);
   const prefersReducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<Phase>(prefersReducedMotion ? "welcome" : "mark");
@@ -298,7 +298,7 @@ export function PwaWelcome({ locale }: { locale: string }) {
         >
           <motion.div variants={riseIn} whileTap={{ scale: 0.97 }}>
             <TrackedLandingLink
-              href={`/${locale}/demo?perspective=owner`}
+              href={"/demo?perspective=owner"}
               eventName="landing.demo_start"
               eventData={{ location: "pwa_welcome_primary", perspective: "owner" }}
             >

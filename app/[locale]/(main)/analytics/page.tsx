@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default async function AnalyticsPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  redirect(`/${locale}/intelligence?view=analytics`);
+export default async function AnalyticsPage() {
+  redirect("/intelligence?view=analytics");
 }
