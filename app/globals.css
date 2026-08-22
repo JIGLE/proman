@@ -575,6 +575,104 @@ body {
 }
 
 /* ============================================
+   OVERLAY ENTER / EXIT
+   ============================================
+
+   `animate-in`, `fade-in-0`, `zoom-in-95`, `slide-in-from-top-2` and friends are the vocabulary
+   every shadcn/Radix overlay is written in. They are NOT part of Tailwind core — they come from
+   `tailwindcss-animate`, which was never installed here, and an undefined utility is silently
+   dropped rather than reported. So `dialog`, `alert-dialog`, `dropdown-menu`, `select`, `sheet`
+   and `notification-center` all carried the classes and none of them animated.
+
+   Authored here rather than pulled in as a dependency for three reasons: the surface actually
+   used is fourteen classes, the package ships bounce/elastic helpers this codebase bans a few
+   sections above, and the durations belong to us. `@utility` (not a plain class) is what lets
+   Tailwind generate the `data-[state=open]:` variants the markup depends on — a bare
+   `.animate-in {}` rule would leave every one of those prefixed classes undefined all over again.
+
+   The mechanism: one pair of keyframes reads a set of custom properties, and each modifier does
+   nothing but set one of them. That is what allows `fade-in-0 zoom-in-95 slide-in-from-top-2` to
+   compose into a single animation instead of three fighting ones.
+*/
+
+@keyframes enter {
+  from {
+    opacity: var(--tw-enter-opacity, 1);
+    transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0)
+      scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), 1);
+  }
+}
+
+@keyframes exit {
+  to {
+    opacity: var(--tw-exit-opacity, 1);
+    transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0)
+      scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), 1);
+  }
+}
+
+@utility animate-in {
+  animation-name: enter;
+  animation-duration: 150ms;
+  /* Calm eases only, per the section above: decelerate in, accelerate out, no overshoot. */
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+@utility animate-out {
+  animation-name: exit;
+  animation-duration: 120ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  animation-fill-mode: both;
+}
+
+/*
+  Core `duration-*` sets only `transition-duration`, so `dialog`'s `duration-200` and `sheet`'s
+  `data-[state=open]:duration-300` were inert on an animation — the markup was written expecting
+  the plugin's behaviour, where duration drives both. Extending it keeps that intent working.
+  Verified safe: nothing in the tree combines `duration-*` with `animate-spin`/`-pulse`/`-bounce`,
+  so no existing animation has its timing hijacked.
+*/
+@utility duration-* {
+  animation-duration: --value(integer) ms;
+  transition-duration: --value(integer) ms;
+}
+
+@utility fade-in-0 {
+  --tw-enter-opacity: 0;
+}
+@utility fade-out-0 {
+  --tw-exit-opacity: 0;
+}
+
+@utility zoom-in-95 {
+  --tw-enter-scale: 0.95;
+}
+@utility zoom-out-95 {
+  --tw-exit-scale: 0.95;
+}
+
+/* Suffix is the Tailwind spacing step: -1 = 0.25rem, -2 = 0.5rem. */
+@utility slide-in-from-top-2 {
+  --tw-enter-translate-y: -0.5rem;
+}
+@utility slide-in-from-bottom-2 {
+  --tw-enter-translate-y: 0.5rem;
+}
+@utility slide-in-from-left-1 {
+  --tw-enter-translate-x: -0.25rem;
+}
+@utility slide-in-from-left-2 {
+  --tw-enter-translate-x: -0.5rem;
+}
+@utility slide-in-from-right-2 {
+  --tw-enter-translate-x: 0.5rem;
+}
+@utility slide-out-to-left-1 {
+  --tw-exit-translate-x: -0.25rem;
+}
+
+/* ============================================
    ANIMATION UTILITIES
    (calm eases only; no bounce/elastic, no glow)
    ============================================ */
@@ -706,10 +804,6 @@ body {
 .animate-slide-up {
   animation: slide-up 0.4s ease-out;
 }
-/* Glow is banned — legacy class kept as a no-op so old markup stays valid */
-.animate-glow-pulse {
-  animation: none;
-}
 .animate-pulse-gentle {
   animation: pulse-gentle 2s infinite;
 }
@@ -731,8 +825,12 @@ body {
 
 .animate-shimmer {
   animation: shimmer 1.5s infinite linear;
-  background: linear-gradient(90deg, transparent, var(--color-hover), transparent);
+  /* `background-image`, not the `background` shorthand. The shorthand also resets
+     `background-color`, so any base colour set alongside it — a skeleton's surface, say — was
+     silently wiped and the element was left as a sweep over nothing. */
+  background-image: linear-gradient(90deg, transparent, var(--color-hover), transparent);
   background-size: 200px 100%;
+  background-repeat: no-repeat;
 }
 
 /* ============================================
