@@ -166,6 +166,19 @@ inside `verify:ci`, so CI, the `situs-implementer` agent and any local run all p
    `i18n-leak-scan.mjs` (a dev tool taking path arguments). Wiring either would produce a gate that
    passes because it skipped.
 
+**Tailwind drops an unknown utility silently**, which is how six overlay primitives (dialog,
+alert-dialog, dropdown-menu, select, sheet, notification-center) shipped `animate-in`,
+`fade-in-0`, `zoom-in-95` and `slide-in-from-*` while animating nothing: those classes live in
+`tailwindcss-animate`, a Tailwind **3** plugin that was never installed here. A class that does
+nothing looks exactly like a class that works, in review and in the diff — the first repair even
+added `slide-in-from-left-1` against markup that says `slide-in-from-left-1/2`, and nothing
+noticed for another whole commit. `npm run css:check` (`scripts/check-class-contract.mjs`) closes
+that in both directions: **used but not defined** is blocking at zero, **defined but not used** is
+a ratchet over `app/globals.css`. Tailwind itself is the oracle — candidates go through the real
+compiler via `@source inline(...)` and the generated selectors are read back — so the checker
+needs no hand-maintained list of valid utilities and survives Tailwind upgrades untouched. Add a
+v4 `@utility`, never a v3 plugin.
+
 **Regenerating `package-lock.json` takes npm 11**, which `packageManager` in `package.json` pins.
 npm 10 rewrites the lockfile without the `libc` fields, and the only packages that carry them are
 the four `@next/swc-linux-*` binaries — Next.js publishes `libc` in their manifests, and nothing

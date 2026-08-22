@@ -48,7 +48,8 @@
     "docs:check": "node scripts/check-docs.js",
     "currency:check": "node scripts/check-currency-literals.js",
     "actions:check": "python3 scripts/check-action-manifests.py",
-    "hygiene": "npm run docs:check && npm run i18n:check:strict && npm run lint:colors && npm run currency:check && npm run actions:check"
+    "hygiene": "npm run docs:check && npm run i18n:check:strict && npm run lint:colors && npm run currency:check && npm run css:check && npm run actions:check",
+    "css:check": "node scripts/check-class-contract.mjs --strict"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
