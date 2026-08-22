@@ -13,10 +13,13 @@
  * A class that does nothing looks exactly like a class that works. That is the whole problem, and
  * it runs in both directions:
  *
- *   USED BUT NOT DEFINED  — the bug above. Blocking at zero: the known instances are fixed, so
- *                           anything new here is a regression.
- *   DEFINED BUT NOT USED  — dead CSS in `globals.css`. Ratcheted down rather than blocked, since
- *                           the backlog is real and shrinking it is a separate piece of work.
+ *   USED BUT NOT DEFINED  — the bug above.
+ *   DEFINED BUT NOT USED  — dead CSS in `globals.css`.
+ *
+ * Both are blocking at zero. The second started at 43 and was meant to be a ratchet, but the
+ * backlog turned out to be one sitting: 43 rules nothing referenced, including four that shadowed
+ * real Tailwind utilities with different behaviour. A ceiling above zero is an invitation, and
+ * there is nothing left to invite.
  *
  * WHY TAILWIND ITSELF IS THE ORACLE. There is no hand-maintained list of valid utilities here, and
  * there must never be one — it would drift the moment Tailwind adds a utility or the theme changes
@@ -39,12 +42,12 @@ const SCAN_DIRS = ["components", "app"];
 const GLOBALS = path.join(ROOT, "app", "globals.css");
 
 /**
- * Baselines — ratchet ceilings for `--strict`.
+ * Ceilings for `--strict`. Both are zero and both must stay there.
  *
- * `undefined` is 0 and must stay there. `unused` starts at the measured count; every class
- * deleted should drive it down, and it may never go up.
+ * Raising either is not a fix. A class the compiler cannot build, or a rule nothing references,
+ * is the finding — not the threshold.
  */
-const BASELINE = { undefined: 0, unused: 43 };
+const BASELINE = { undefined: 0, unused: 0 };
 
 /**
  * Classes that are defined here but consumed somewhere this scan cannot see, or are deliberately
@@ -541,7 +544,7 @@ async function main() {
     "Defined but not used",
     unusedClasses,
     BASELINE.unused,
-    "Dead rules in app/globals.css. Delete them and lower the baseline.",
+    "Dead rules in app/globals.css. Delete them.",
   );
 
   console.log(
